@@ -73,3 +73,11 @@ They seem to be identical cards except for differences is card dimensions.
 ---
 
 Amazon - mixed inventory and you're never quite sure what you're getting or from whom.
+
+---
+
+Price comparison: you can price compare across Digikey, Mouser, RS, Arrow, Vertical, Element14 and others at <https://www.eciaauthorized.com/en>
+
+Note: Element14, Farnell, Newark and Avnet are all the same thing.
+
+Note that Digikey and Mouser both distribute some or all of the Adafruit and Sparkfun ranges. Digikey carries some Pololu parts but the coverage doesn't seem very comprehensive.
