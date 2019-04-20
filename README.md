@@ -32,7 +32,7 @@ The [BOM](https://github.com/NVIDIA-AI-IOT/jetbot/wiki/bill-of-materials) sugges
 
 *Important:* in various camera reviews people comment on having created shorts screwing in the camera module - so probably best to use nylon screws and washers.
 
-The Molex antennas are available from [Mouser](https://www.mouser.ch/ProductDetail/Molex/204281-1100?qs=%2Fha2pyFaduhMSNqNrOS4QfqJJ7QBOpAfUPiCEJKyFlTDCjhth2S02Q%3D%3D) and [Digikey](https://www.digikey.ch/product-detail/en/molex/2042811100/WM17372-ND/8020427).
+**2 x** Molex antenna - available from [Mouser](https://www.mouser.ch/ProductDetail/Molex/204281-1100?qs=%2Fha2pyFaduhMSNqNrOS4QfqJJ7QBOpAfUPiCEJKyFlTDCjhth2S02Q%3D%3D) and [Digikey](https://www.digikey.ch/product-detail/en/molex/2042811100/WM17372-ND/8020427).
 
 64GB microSD class 10 U3 (look for the 3 in a U symbol) - [digitec](https://www.digitec.ch/de/s1/product/samsung-evo-microsd-uhs-i-64gb-class-10-speicherkarte-6304644)
 
