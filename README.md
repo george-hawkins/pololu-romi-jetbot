@@ -34,7 +34,7 @@ The [BOM](https://github.com/NVIDIA-AI-IOT/jetbot/wiki/bill-of-materials) sugges
 
 The Molex antennas are available from [Mouser](https://www.mouser.ch/ProductDetail/Molex/204281-1100?qs=%2Fha2pyFaduhMSNqNrOS4QfqJJ7QBOpAfUPiCEJKyFlTDCjhth2S02Q%3D%3D) and [Digikey](https://www.digikey.ch/product-detail/en/molex/2042811100/WM17372-ND/8020427).
 
-64GB microUSD class 10 U3 (look for the 3 in a U symbol) - [digitec](https://www.digitec.ch/de/s1/product/samsung-evo-microsd-uhs-i-64gb-class-10-speicherkarte-6304644), [Mouser](https://www.mouser.ch/ProductDetail/Panasonic/RP-SMTT64DA1?qs=sGAEpiMZZMtyMAXUUxCBE3PXQ52q2ovEGvSv64covK5zbzeLXOr0eA%3D%3D).
+64GB microSD class 10 U3 (look for the 3 in a U symbol) - [digitec](https://www.digitec.ch/de/s1/product/samsung-evo-microsd-uhs-i-64gb-class-10-speicherkarte-6304644)
 
 Note: UHS is a little confusing, there's the bus type - UHS-I, UHS-II or UHS-III and a speed class - U1 or U3 - the two cards linked to above (and the card on Amazon in the original BOM are all UHS-I U3 cards).
 
@@ -44,7 +44,27 @@ Note that Adafruit comment that it's really a 5.25V device - the pictures for a 
 
 PiOLED - <https://www.adafruit.com/product/3527>
 
+---
+
 2x36 right-angle male header - <https://www.adafruit.com/product/1541>
+
+You only actually need 2x3 - Adafruit on its [partsfinder](http://ladyada.net/wiki/partfinder/header) page suggests the Samtec TSW series for generic right-angle 2-row header.
+
+Just go to Mouser [headers & wire housing](https://www.mouser.ch/Connectors/Headers-Wire-Housings/_/N-ay0lo/) and select:
+
+* series: TSW
+* mounting angle: right angle
+* number of rows: 2
+* number of positions: 6 and all higher values
+* termination post length: 2.29mm
+* contact plating: gold
+* type: pin strip
+
+Note that the letter (F, L or G) before the "-D-RA" bit denotes the plating - F being the cheapest gold plating and G the most expensive.
+
+And just choose look what's in stock and seems like good value - I chose TSW-116-08-F-D-RA.
+
+---
 
 While not in the BOM they stick down the WiFi module with what looks like polyimide tape, i.e. temperature resistant and non-conductive tape - <https://www.adafruit.com/product/3057>
 
