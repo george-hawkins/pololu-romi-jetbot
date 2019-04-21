@@ -7,8 +7,8 @@ Adafruit Blinka support for Jetson: <https://blog.adafruit.com/2019/03/18/adafru
 
 Hackaday intro: <https://hackaday.com/2019/03/18/hands-on-new-nvidia-jetson-nano-is-more-power-in-a-smaller-form-factor/>
 
-Jetbot
-------
+Romi Jetbot
+-----------
 
 Original BOM - <https://github.com/NVIDIA-AI-IOT/jetbot/wiki/bill-of-materials>
 
@@ -20,7 +20,7 @@ According to this Intel [support answer](https://forums.intel.com/s/question/0D7
 
 From the photos in the various tutorials all you see is "8265NGW".
 
-Mouser sells the standard [8265.NGWMG](https://www.mouser.ch/ProductDetail/Intel/8265NGWMG?qs=sGAEpiMZZMsRr7brxAGoXSSUPDSAjAiVSJQY2dz2OC6rAL38Dke%252Beg%3D%3D), plus two variants - the [S](https://www.mouser.ch/ProductDetail/Intel/8265NGWMGS?qs=sGAEpiMZZMsRr7brxAGoXSSUPDSAjAiVjrRik%2FPuGZu8bwTo473NRg%3D%3D) and the [NV](https://www.mouser.ch/ProductDetail/Intel/8265NGWMGNV?qs=sGAEpiMZZMsRr7brxAGoXSSUPDSAjAiVviyySE0hnZ0PrUWxOuzKGA==).
+Mouser sells the standard [8265.NGWMG](https://www.mouser.ch/ProductDetail/Intel/8265NGWMG?qs=sGAEpiMZZMsRr7brxAGoXSSUPDSAjAiVSJQY2dz2OC6rAL38Dke%252Beg%3D%3D) (and also the various variants).
 
 See the nVidia [forum thread](https://devtalk.nvidia.com/default/topic/1049303/jetson-nano/jetson-nano-wifi-/) on diagnosing Jetson Nano WiFi issues.
 
@@ -189,6 +189,14 @@ Amazon - mixed inventory and you're never quite sure what you're getting or from
 
 Price comparison: you can price compare across Digikey, Mouser, RS, Arrow, Vertical, Element14 and others at <https://www.eciaauthorized.com/en>
 
-Note: Element14, Farnell, Newark and Avnet are all the same thing.
+Note: Element14, Farnell, Newark and Avnet are all the really same thing (or at least part of the same family of companies).
 
 Note that Digikey and Mouser both distribute some or all of the Adafruit and Sparkfun ranges. Digikey carries some Pololu parts but the coverage doesn't seem very comprehensive.
+
+---
+
+Final purchase list: <https://docs.google.com/spreadsheets/d/1FN-KnapP9kOOyOERJ5lF4QC2hGJ5NDRDmlzqIKKYnAw/edit?usp=sharing>
+
+I ordered all Adafruit parts from Mouser, except the header - where I just took an equivalent in-stock part from Mouser.
+
+<https://www.exp-tech.de/> looks like the best European source for Romi parts. But the [shipping costs](https://www.exp-tech.de/versandkosten-zahlungsarten) for Switzerland are EUR 29.75, not including UPS MwSt related fees. So it's cheaper just to order direct from Pololu (and ship with USPS).
