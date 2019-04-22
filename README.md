@@ -28,9 +28,21 @@ See the nVidia [forum thread](https://devtalk.nvidia.com/default/topic/1049303/j
 
 Jetson Nano Developer Kit - <https://developer.nvidia.com/embedded/buy/jetson-nano-devkit>
 
-The [BOM](https://github.com/NVIDIA-AI-IOT/jetbot/wiki/bill-of-materials) suggests a Leopard Imaging camera or a standard RPi camera with 160&deg; attachment. They link to Amazon and eBay for resellers of such an attachment - but in all cases the original manufacturer seems to be Waveshare. Waveshare seems a very common source for these cameras (the [Pi-Shop](https://www.pi-shop.ch) and many others carry them). So you can buy it direct [here](https://www.waveshare.com/imx219-d160.htm) or just buy their all-in-one unit, i.e. attachment and camera PCB, [here](https://www.waveshare.com/rpi-camera-g.htm). Note: from the pictures it looks like the attachment _might_ have adjustable focus (see threading), however from the descriptions of it, the all-in-one unit and the Leopard Imaging camera, they all seem to be fixed focus.
+---
+
+The original BOM suggests a Leopard Imaging camera (with 145&deg; [FOV](https://en.wikipedia.org/wiki/Field_of_view)) or a standard Raspberry Pi camera with 160&deg; attachment. The BOM links to Amazon and eBay for resellers of such an attachment - but in all cases the original manufacturer seems to be Waveshare. Waveshare seems a very common source for these cameras ([ModMyPi](https://www.modmypi.com/), the [Pi-Shop](https://www.pi-shop.ch) and many others carry them).
+
+Waveshare sell all-in-one wide-angle units, i.e. attachment and camera PCB. However in the case of Waveshare (and most other similar units) the sensor is the older OV5647 that was used in the V1 Raspberry Pi camera and has been discontinued by its manufacturer Omnivision. The Jestson Nano only supports the newer Sony IMX219 sensor used in the V2 Raspberry Pi camera and cameras like the one from Leopard Imaging. See this nVidia [forum post](https://devtalk.nvidia.com/default/topic/1049605/jetson-nano/-raspberry-pi-version-1-camera-does-not-work/) and this GitHub [issue](https://github.com/NVIDIA-AI-IOT/jetbot/issues/29) for more details and pointers to supported cameras. The Leopard Imaging camera and the standard Raspberry Pi camera with attachment are fairly cheap options, the other supported cameras are all noticeably more expensive.
+
+Note: the Raspberry Pi camera is fixed focus but it can be adjusted with a pliers - an easier alternative is the Adafruit [lens adjustment tool](https://www.adafruit.com/product/3518).
+
+Note: from the pictures it looks like the Waveshare 160&deg; attachment _might_ have adjustable focus (see threading), however from the descriptions of it, the all-in-one unit and the Leopard Imaging camera, they all seem to be fixed focus.
 
 *Important:* in various camera reviews people comment on having created shorts screwing in the camera module - so probably best to use nylon screws and washers.
+
+I bought a [Raspberry Pi camera V2](https://www.waveshare.com/rpi-camera-v2.htm) and [160&deg; attachment](https://www.waveshare.com/imx219-d160.htm) from Waveshare. It's impossible to tell if the camera is genuine but the PCB and cable look identical to those you see in Adafruit's [product images](https://www.adafruit.com/product/3099) for the camera.
+
+---
 
 **2 x** Molex antenna - available from [Mouser](https://www.mouser.ch/ProductDetail/Molex/204281-1100?qs=%2Fha2pyFaduhMSNqNrOS4QfqJJ7QBOpAfUPiCEJKyFlTDCjhth2S02Q%3D%3D) and [Digikey](https://www.digikey.ch/product-detail/en/molex/2042811100/WM17372-ND/8020427).
 
