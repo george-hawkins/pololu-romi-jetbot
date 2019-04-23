@@ -26,3 +26,8 @@ Remember all these cars are probably built for speed, and many are built for all
 Whereas a gear ratio of 34:1 or 75:1 like the the Pololu Wild Thumper with high torque might be more appropriate and giving up some all-terrain performance might make for greater stability, less bounce, in flat indoor environments.
 
 It'd be interesting to know what experience ETH has with chassis - <https://www.ethz.ch/en/news-and-events/eth-news/news/2018/01/lab-for-self-driving-vehicles.html>
+
+It'd also be nice to know what chassis DeepRacer uses - it does seem to be monster truck chassis, so maybe I'm wrong in thinking something more car like would be better:
+
+* <https://aws.amazon.com/deepracer/faqs/>
+* <https://docs.aws.amazon.com/deepracer/latest/developerguide/deepracer-model-car-configuration.html>
