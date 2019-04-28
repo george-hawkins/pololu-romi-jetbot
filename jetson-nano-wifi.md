@@ -18,6 +18,6 @@ Remove the screw that will hold down the WiFi module. On my board this screw was
 
 Push the WiFi module into its connector and route the antennas however you want.
 
-Note: for the Jetbot build the author tapes down the module and the feed lines of the antennas with Kapton tape. I didn't bother with this.
+Note: for the Jetbot build the author tapes down the module and the feed lines of the antennas with Kapton tape (see [this picture](https://raw.githubusercontent.com/wiki/NVIDIA-AI-IOT/jetbot/images/JB3-Assy_08-4.JPG)). I didn't bother with this.
 
 Reinsert the Jetson Nano module into its connector and push down gently - the catches will move aside and then reengage.
