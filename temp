@@ -1,0 +1,29 @@
+Once you've plugged back in the keyboad, mouse and HDMI connector - but not the ethernet cable - and reconnected power you'll see you have no internet connection.
+
+Just go Networks (upper right, beside volume etc. in the system menu bar) and select your WiFi network.
+
+----
+
+By default the sound goes to the built-in analog output - it's not clear where this goes as the development board has no audio jack. Perhaps it goes out as I2S on the GPIO header - in which case you'd need something like Adafruit's [I2S breakout](https://www.adafruit.com/product/3006). How audio-in is handled is another matter. Perhaps looking at how things are done with the Snips [dev kit](https://docs.snips.ai/the-maker-kit/dev-kit) would provide some pointers - it uses a [ReSpeaker 2-Mics Pi HAT](http://wiki.seeedstudio.com/ReSpeaker_2_Mics_Pi_HAT/) that features two microphones and a connector for a speaker. Note that this HAT also features various other fairly random extras - two grove connectors, RGBs and a push button.
+
+To get audio out via HDMI Settings / Sound and just select "HDMI / DisplayPort" rather than "Analog Output".
+
+---
+
+Chrome's tendency to gobble all available resources quickly causes the Jetson Nano to grind to a halt - so probably best to keep open tabs to a minimum.
+
+---
+
+Under `/media/$USER/L4T-README` you'll find various interesting files about Linux for Tegra. It's not clear what's mounting this virtual drive. In there you'll find instructions about things like USB dev mode - like the Intel Edison, it looks like you can connect the board via USB to your main system and then run ethernet over USB and then run VNC on the Jetson Nano and interact with it that way.
+
+Other Jetson specific stuff can be found under `/opt/nvidia`.
+
+ls /usr/lib/vino
+gsettings list-recursively org.gnome.Vino
+
+nmcli c
+gsettings set org.gnome.settings-daemon.plugins.sharing.service:/org/gnome/settings-daemon/plugins/sharing/vino-server/ enabled-connections "['183dc28d-fca6-4a9b-a4d5-3cbee6c368a3']"
+# https://unix.stackexchange.com/a/390919
+# Settings / Desktop Sharing just seems to crash.
+gsettings set org.gnome.Vino prompt-enabled false
+gsettings set org.gnome.Vino require-encryption false
