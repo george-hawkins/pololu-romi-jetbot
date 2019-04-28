@@ -57,3 +57,5 @@ This may be resolved by adding a camera.
 The system doesn't seem particularly responsive but installing and running `htop` doesn't show anything unexpected.
 
 The screen handling seems surprisingly poor given that the system is using nVidia's proprietary drivers and given that nVidia definitely knows how to do HDMI in products like the nVidia shield.
+
+I had to turn off overscan on my TV otherwise the edges of the desktop were offscrean. Overscan seems to be the default on some older TVs but really it should never be on - see this [thread](https://devtalk.nvidia.com/default/topic/1027349/jetson-tx2/display-does-not-fit-properly/). On my Samsung TV disabling overscan involves setting it the picture to "screen fit" - select Menu on the remote control, then select Picture, go down and select Screen Adjustment, then Picture Size and change it to Screen Fit.
