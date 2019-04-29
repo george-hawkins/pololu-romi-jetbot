@@ -154,3 +154,42 @@ On my Ubuntu box I used `remote-viewer` to connect to `vnc://JetsonNano.local:59
 ---
 
 Perhaps [x11vnc](https://help.ubuntu.com/community/VNC/Servers#x11vnc) or one of the other VNC servers that don't share a real display would be the way to go. See also this [trouble shooting section](https://wiki.archlinux.org/index.php/X11vnc#Troubleshooting) on using x11vnc with Gnome 3.
+
+---
+
+Preventing the graphical interface from starting just requires setting the default target to boot into to `multi-user.target`. You can see the current target, see the chain of units and set the target to `multi-user.target` like so:
+
+    $ systemctl get-default
+    graphical.target
+    $ systemd-analyze critical-chain
+    graphical.target @3.744s
+    `-multi-user.target @3.742s
+      `-...
+    $ sudo systemctl set-default multi-user.target
+
+Note that many answers on how to disabling the graphical interface also suggest you change `GRUB_CMDLINE_LINUX_DEFAULT` to `text`. The Jetson Nano doesn't override any grub defaults, so you have to create `/etc/default/grub` if you want to do so:
+
+    $ sudo bash
+    $ cat > /etc/default/grub
+    GRUB_CMDLINE_LINUX_DEFAULT="text"
+    ^D
+    $ exit
+
+You need to run `update-grub` now - however this isn't installed by default, so you have to do:
+
+    $ sudo apt install grub2-common
+    $ sudo update-grub
+
+It turns out this changes nothing, i.e. the non-overriden default is `text` so this step is unnecessary.
+
+By default the NetworkManager won't start WiFi until someone has logged in - either via the graphical interface or via the console. To get it to start WiFi straight away without waiting for someone to log in you need to:
+
+    $ cd /etc/NetworkManager/system-connections 
+    $ ls
+    $ sudo vim MyWifiSsid
+
+Where `MyWifiSsid` is the file shown by `ls` that has the same name as your WiFi network. Now find the line:
+
+    permissions=user:my-user-name:;
+
+And remove everything _after_ the `=`.
