@@ -192,4 +192,113 @@ Where `MyWifiSsid` is the file shown by `ls` that has the same name as your WiFi
 
     permissions=user:my-user-name:;
 
-And remove everything _after_ the `=`.
+And remove everything _after_ the `=`. See this [SO answer](https://askubuntu.com/a/796962/734204) for more details (and what to do if you have `psk-flags=1` rather than `permissions=...`).
+
+---
+
+Memory usage with graphical envionment:
+
+    $ free
+                  total        used        free      shared  buff/cache   available
+    Mem:        4051520      907384     2699524       21300      444612     2974532
+    Swap:             0           0           0
+    $ free -h
+                  total        used        free      shared  buff/cache   available
+    Mem:           3.9G        1.0G        2.4G         21M        501M        2.7G
+    Swap:            0B          0B          0B
+
+Surprisingly the thing with the biggest RSS is `gnome-software` with just 144M - which isn't too shocking.
+
+Memory usage without graphical envionment:
+
+    $ free
+                  total        used        free      shared  buff/cache   available
+    Mem:        4051520      335504     3466308       17608      249708     3549096
+    Swap:             0           0           0
+    $ free -h
+                  total        used        free      shared  buff/cache   available
+    Mem:           3.9G        325M        3.3G         17M        243M        3.4G
+    Swap:            0B          0B          0B
+
+Looking at the `available` column you can see the difference is 561M of your 3956M of total memory.
+
+And now the biggest thing running is the `nvargus-daemon` with a RSS of just 19M.
+
+---
+
+Rather than viewing the real display remotely with the default VNC server, which performed terribly, I found using TigerVNC with its own virtual display was infinitely better for remote graphical access to the Jetson Nano.
+
+Install and run TigerVNC:
+
+    $ sudo apt install tigervnc-standalone-server
+    $ vncserver -localhost no
+
+The first time you run it, it asks you for a password to use when connecting to it - which it hashes and stores in `~/.vnc/passwd`. It doesn't seem possible not to select a password.
+
+You can kill the server with:
+
+    $ vncserver -kill :1
+
+On your remote machine you can connect with:
+
+    $ xtigervncviewer JetsonNano.local:1
+
+On connecting you'll find a less Unity like, i.e. more vanilla, version of the Gnome desktop - I didn't investigate why it doesn't run with the same configuration as the "real" desktop envionment.
+
+When running the viewer you can press F8 to bring up a context menu that allows you to go full screen etc.
+
+On Ubuntu 18.04 and later you can install the viewer with just:
+
+    $ sudo apt install tigervnc-viewer
+
+But on my old 16.04 system I had to go to <https://bintray.com/tigervnc/stable/tigervnc#files> and then into the `ubuntu-16.04LTS/amd64` subdirectory and download the latest `xtigervncviewer_X.Y.Z-1ubuntu1_amd64.deb`
+
+Then to install it:
+
+    $ cd ~/Downloads
+    $ mv xtigervncviewer_*.deb /tmp
+    $ cd /tmp
+    $ sudo apt install ./xtigervncviewer_*.deb
+
+Moving to `/tmp` just resolves a minor privileges issue when it comes to accessing the directory containing the `.deb`.
+
+Back on the server side you can switch to a more lightweight desktop like so:
+
+    $ vncserver -kill :1
+    $ sudo apt-get install lxde
+    $ cd ~/.vnc
+    cat > xstartup << EOF
+    #!/bin/sh
+    exec startlxde
+    EOF
+    $ chmod a+x xstartup
+    $ vncserver -localhost no
+
+Before trying [LXDE](https://lxde.org/) I tried [Xfce](https://www.xfce.org/) but Chromium and various other things failed to start (despite following these Arch Linux [instructions](https://wiki.archlinux.org/index.php/TigerVNC#Edit_the_environment_file)). After some investigation I gave up, without coming to any conclusions, and switched to LXDE where things worked without issue.
+
+When running Gnome with TigerVNC, i.e. just connecting without starting anything extra, the memory usage was about the same as when booting into the real graphical envionment:
+
+    $ free
+                  total        used        free      shared  buff/cache   available
+    Mem:        4059712      983868     2497136       28860      578708     2891508
+    Swap:             0           0           0
+
+The `available` amount is slightly more but not really significantly more.
+
+When running LXDE with TigerVNC the memory usage was noticeably lower:
+
+    $ free
+                  total        used        free      shared  buff/cache   available
+    Mem:        4059712      504564     3075228       29124      479920     3374164
+    Swap:             0           0           0
+
+This is a 471M saving on the Gnome setup - so it seems LXDE really does use substantially less resource - at least as far as getting the basic environment up and ready is concerned.
+
+Copy & paste
+------------
+
+When starting into the Gnome it automatically starts `vncconfig` which needs to be running for copy & paste to work between the local and remote systems.
+
+With LXDE I had to open a terminal and start `vncconfig` manually - copy & paste worked as expected once this was done.
+
+You can set `vncconfig` to be started automatically by going to the LXDE main menu (lower left) then Preferences / Default applications for LXSession and then to the Autostart tab, entering `@vncconfig` and hitting the Add button. Note: this just adds an entry to `~/.config/lxsession/LXDE/autostart`. Leaving out the `@`, as I did initially, caused LXPanel to crash (the `@` is supposed to be optional and just marks that you want the application in question to be restarted if it crashes, according to the [documentation](https://wiki.lxde.org/en/LXSession#autostart_configuration_file).
