@@ -302,3 +302,15 @@ When starting into the Gnome it automatically starts `vncconfig` which needs to 
 With LXDE I had to open a terminal and start `vncconfig` manually - copy & paste worked as expected once this was done.
 
 You can set `vncconfig` to be started automatically by going to the LXDE main menu (lower left) then Preferences / Default applications for LXSession and then to the Autostart tab, entering `@vncconfig -nowin` and hitting the Add button. Note: this just adds an entry to `~/.config/lxsession/LXDE/autostart`. Leaving out the `@`, as I did initially, caused LXPanel to crash (the `@` is supposed to be optional and just marks that you want the application in question to be restarted if it crashes, according to the [documentation](https://wiki.lxde.org/en/LXSession#autostart_configuration_file).
+
+Control of network connections
+------------------------------
+
+Both the Gnome and LXDE, when running within TigerVNC, complained that "System policy prevents control of network connections".
+
+To change this:
+
+    $ sudo cp /var/lib/polkit-1/localauthority/10-vendor.d/org.freedesktop.NetworkManager.pkla /var/lib/polkit-1/localauthority/50-local.d
+    $ sudo /var/lib/polkit-1/localauthority/50-local.d/org.freedesktop.NetworkManager.pkla
+
+And change `org.freedesktop.NetworkManager.settings.modify.system` to `org.freedesktop.NetworkManager.network-control`. Note: the original `org.freedesktop.NetworkManager.pkla`, that's copied, is just being used as a template for enabling what we need, i.e. `network-control`. See this [blog entry](https://lauri.xn--vsandi-pxa.com/cfgmgmt/polkit.html) on Polkit for more details.
