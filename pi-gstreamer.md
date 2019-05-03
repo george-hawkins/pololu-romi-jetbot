@@ -50,7 +50,7 @@ And then list the supported FPS range for a given format and dimensions:
 
 ---
 
-Note that the camera requires that `gpu_mem` be at least 128M - which indeed is default value one sees in `/boot/config.txt` - so there's no need to change it. Perhaps this was once not the case and why it comes up on some pages.
+Various pages note that `gpu_mem` must be at least 32M with 128M recommended - if you look in `/boot/config.txt` you see that 128M is the pre-configured default. So this hardly seems worth mentioning but maybe at one stage the default for `gpu_mem` was lower. TODO: check if `gpu_mem` is maybe updated to 128M from a lower value when setting up the camera with `raspi-config`.
 
 ---
 
@@ -70,11 +70,109 @@ VLC sometimes doesn't release the `/dev/video0` device properly, to fix this rem
 
 To stream:
 
-    $ cvlc --intf http --http-port 9090 --http-password SuperSecret v4l2:///dev/video0 --v4l2-width 1920 --v4l2-height 1080 --v4l2-chroma h264 --sout '#standard{access=http,mux=ts,dst=:9091}'
+    $ cvlc v4l2:///dev/video0 --v4l2-width 1920 --v4l2-height 1080 --v4l2-chroma h264 --sout '#standard{access=http,mux=ts,dst=:9090}'
 
-This starts a web interface to VLC on port 9090 and streams video on port 9091.
+Among other output you see:
 
-Then on the receiving machine you can start VLC, go to Media / Open Network Stream... and enter the URL `http://192.168.0.66:9091` (where the IP address is the address of the Pi).
+    [0175f108] vlcpulse audio output error: PulseAudio server connection failure: Connection refused
+    [01758840] dbus interface error: Failed to connect to the D-Bus session daemon: Unable to autolaunch a dbus-daemon without a $DISPLAY for X11
+    [016fe110] main libvlc error: interface "dbus,none" initialization failed
 
-There's a lag of a few seconds before the video starts playing (and the video stream is a similar amount of time behind reality).
+It's possible to get rid of the PulseAudio audio error with `--aout dummy` and the D-Bus error with `--no-dbus`. So you end up with:
 
+    $ cvlc --aout dummy --no-dbus v4l2:///dev/video0 --v4l2-width 1920 --v4l2-height 1080 --v4l2-chroma h264 --sout '#standard{access=http,mux=ts,dst=:9090}'
+    VLC media player 3.0.6 Vetinari (revision 3.0.6-0-g5803e85f73)
+    [00103288] main interface error: no suitable interface module
+    [0009a110] main libvlc error: interface "globalhotkeys,none" initialization failed
+    [001032f0] dummy interface: using the dummy interface module...
+
+After much searching there seems to be no way to get rid of the `main interface error` and the `main libvlc error` - they seem to be just warnings rather than errors.
+
+So if all has gone well this will stream video on port 9090.
+
+Then on the receiving machine you can start VLC, go to Media / Open Network Stream... and enter the URL `http://192.168.0.66:9090` (where the IP address needs to be the address of _your_ Pi).
+
+The video stream takes a few seconds to start playing and then lags behind reality by a similar amount of time.
+
+Totem, the default player on Ubuntu, works just as well - as do presumably a plethora of other Linux media players. Note: totem uses GStreamer under the covers.
+
+Often on killing and restarting `cvlc` I'd see the error:
+
+    [0071a0b8] v4l2 demux error: cannot start streaming: Operation not permitted
+    [0071a0b8] v4l2 demux error: not a radio tuner device
+
+The only solution to this seemed to be to reload the `bcm2835-v4l2` module as outlined above.
+
+Extremely frequently I also saw the error:
+
+    [0093ac18] main decoder error: buffer deadlock prevented
+
+There seemed to be no solution to this other than to repeatedly reload the `bcm2835-v4l2` module and restart `cvlc` until eventually it started without this error. Despite implying that something has been prevented (and the situation recovered) this seems to be a serious error - no streaming occurs if this error appears.
+
+Either my hardware or the v4l2 driver seemed to be very flakey when used like this.
+
+---
+
+You can see the current settings that V4L2 can display like so:
+
+    $ v4l2-ctl --all
+
+You can see e.g. the range of values and the current value for auto-exposure:
+
+    auto_exposure (menu)   : min=0 max=3 default=0 value=0
+
+Some settings are marked `(int)` meaning they just take a simple integer value, e.g. brightness takes any value from 0 to 100.
+
+For the ones that are marked `(menu)` like auto-exposure above you can see what the numerica values, in this case 0 to 3, mean like so:
+
+    $ v4l2-ctl --list-ctrls-menus
+
+This enumerates the menus for all `(menu)` settings, so for auto-exposure you see that 0 is 'Auto Mode' and 1 is 'Manual Mode', oddly there's no items for the additional acceptable values 2 and 3.
+
+---
+
+To see all this data presented in a UI you can use the [Video4Linux2 Universal Control Panel](http://manpages.ubuntu.com/manpages/disco/man1/v4l2ucp.1.html).
+
+Make sure to ssh into your Pi with X11 forwarding enabled, i.e. use `-X`:
+
+    $ ssh -X pi@raspberrypi.local
+    $ sudo apt install v4l2ucp
+    $ v4l2ucp /dev/video0
+
+You'll see the control panel pop up on your local system (assuming there's a local X server). However before you get to that point it'll complain, with a long stream of popups, about situations like the one seen above where there's no menu text for the auto-exposure values 2 and 3 - with each popup saying something like ""Unable to get menu item for Auto Exposure, index=2. Will use unknown".
+
+To be honest I find the text output of `v4l2-ctl` more digestable.
+
+---
+
+Streaming with `raspivid` proved far less error prone than using V4L2 - it could be killed and restarted repeatedly without seeing any of the issues encountered when using `cvlc` and `/dev/video0`.
+
+Pi:
+
+$ raspivid -v -n -t 0 -md 6 -w 640 -h 480 -fps 20 -vf -l -o tcp://0.0.0.0:2222
+
+Options:
+
+* `-v` - verbose.
+* `-n` - disable preview window.
+* `-t 0` - start capturing immediately.
+* `-md 6 -w 640 -h 480` - mode 6 with width and height set to match the sensor mode.
+* `-fps 42` - frames-per-second matching the lower range of mode 6.
+* `-vf` - vertical flip (if you appear upside-down).
+* `-l -o tcp://0.0.0.0:2222` - listen for TCP connections on port 2222.
+
+See the Picamera [FoV page](https://picamera.readthedocs.io/en/release-1.12/fov.html) for the list of modes and diagrams of what this means it terms of FoV (which the otherwise comprehensive Raspberry Pi [camera documentation](https://www.raspberrypi.org/documentation/raspbian/applications/camera.md) doesn't have).
+
+Local:
+
+$ cvlc tcp/h264://raspberrypi.local:2222
+
+The lag is extreme - but presumably this can be tuned? For far less lag:
+
+$ mplayer -nolirc -fps 200 -demuxer h264es ffmpeg://tcp://raspberrypi.local:2222
+
+An FPS of 200 sounds extreme but it doesn't seem to mean what is seems. Leaving it at a far higher value than the FPS than the Pi is producing is fine but lower it too far and lag suddenly appears, so one might as well set it higher than the highest possible Pi FPS.
+
+TODO: I'd like to know what's going on here - it I set both sides to 30 FPS I get serious lag, if I set them both to 42 (with mode 6) then all seems fine but I don't gain anything in quality or reduced CPU usage by setting MPlayer's FPS lower - so it seems sticking with 200 is simplest.
+
+Oddly no matter what the setting lag seems to appear and disappear over time even if there's no lag initially.
