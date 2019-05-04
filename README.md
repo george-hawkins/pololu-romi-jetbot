@@ -36,11 +36,13 @@ Waveshare sell all-in-one wide-angle units, i.e. attachment and camera PCB. Howe
 
 Note: the Raspberry Pi camera is fixed focus but it can be adjusted with a pliers - an easier alternative is the Adafruit [lens adjustment tool](https://www.adafruit.com/product/3518).
 
+**Update:** I bought a lens adjustment tool from Adafruit but the camera module arrived it came with an identical tool.
+
 Note: from the pictures it looks like the Waveshare 160&deg; attachment _might_ have adjustable focus (see threading), however from the descriptions of it, the all-in-one unit and the Leopard Imaging camera, they all seem to be fixed focus.
 
 *Important:* in various camera reviews people comment on having created shorts screwing in the camera module - so probably best to use nylon screws and washers.
 
-I bought a [Raspberry Pi camera V2](https://www.waveshare.com/rpi-camera-v2.htm) and [160&deg; attachment](https://www.waveshare.com/imx219-d160.htm) from Waveshare. It's impossible to tell if the camera is genuine but the PCB and cable look identical to those you see in Adafruit's [product images](https://www.adafruit.com/product/3099) for the camera.
+I bought a [Raspberry Pi camera module V2](https://www.waveshare.com/rpi-camera-v2.htm) and [160&deg; attachment](https://www.waveshare.com/imx219-d160.htm) from Waveshare. On Chinese sites it's sometimes impossible to tell if a product is really from the expected original manufacturer. Terms like _genuine_ or _official_ Raspberry camera module V2 can just mean _indistinguishable_ (it may even be from the same Chinese contract manufacturer). The camera module supplied by Waveshare comes in [RS Components](https://www.rs-online.com/designspark/raspberry-pi) packaging and looks to be the real thing.
 
 ---
 
@@ -212,3 +214,12 @@ Final purchase list: <https://docs.google.com/spreadsheets/d/1FN-KnapP9kOOyOERJ5
 I ordered all Adafruit parts from Mouser, except the header - where I just took an equivalent in-stock part from Mouser.
 
 <https://www.exp-tech.de/> looks like the best European source for Romi parts. But the [shipping costs](https://www.exp-tech.de/versandkosten-zahlungsarten) for Switzerland are EUR 29.75, not including UPS MwSt related fees. So it's cheaper just to order direct from Pololu (and ship with USPS).
+
+**Update:** when the Pololu order arrived [Die Post](https://www.post.ch/de/geschaeftlich/themen-a-z/preise-empfangen/preise-import/preise-importverzollung) charged an additional Fr. 30.30:
+
+* Vezollung - Fr. 16 + 3% of the package's value (not including the postage cost).
+* MwSt. - 7.7% of the package's value plus Vezollung.
+
+In both cases the package's value did _not_ include the postage cost. For packages coming from Germany, Austria, France and Italy the fixed fee is Fr. 11.50, rather than Fr. 16, but the rest is the same.
+
+So that's US$30.45 plus Fr. 30.30 of duties on parts that cost just US$116.20.
