@@ -1,3 +1,6 @@
+Jetson Nano notes
+=================
+
 On the first boot the Nano _appeared_ to hang while displaying a dialog that says it's "waiting for unattended-upgr to exit".
 
 But I left it for about 30 minutes and it did eventually move on from this point. Others have experienced this (see this [thread](https://devtalk.nvidia.com/default/topic/1049751/jetson-nano/hangs-at-first-boot-at-quot-waiting-for-unattended-upgr-to-exit-quot-/)) but the solution seems to be simply to wait.
@@ -8,15 +11,23 @@ Despite this apparent unattended upgrade process as part of starting up the syst
     $ sudo apt full-upgrade
     $ sudo apt autoremove
 
-/etc/ld.so.conf.d/aarch64-linux-gnu_GL.conf: No such file or directory
-/etc/ld.so.conf.d/aarch64-linux-gnu_EGL.conf: No such file or directory
+On doing this it complained about a number of things. The first is easy to resolve - the errors seen are:
+
+    /etc/ld.so.conf.d/aarch64-linux-gnu_GL.conf: No such file or directory
+    /etc/ld.so.conf.d/aarch64-linux-gnu_EGL.conf: No such file or directory
+
+If you go into `/etc/ld.so.conf.d` you'll see the files do exist:
 
     $ cd /etc/ld.so.conf.d
     $ cat aarch64-linux-gnu_GL.conf
     $ cat aarch64-linux-gnu_EGL.conf
 
+The issue seems to be that they're soft links:
+
     $ ls -l aarch64-linux-gnu_GL.conf
     /etc/alternatives/aarch64-linux-gnu_gl_conf
+
+And for whatever reason it seems `update-initramfs` so just replace the soft links with the real files with the same contents:
 
     $ FILE=$(readlink -f aarch64-linux-gnu_GL.conf)
     $ sudo rm aarch64-linux-gnu_GL.conf
@@ -26,13 +37,22 @@ Despite this apparent unattended upgrade process as part of starting up the syst
     $ sudo rm aarch64-linux-gnu_EGL.conf
     $ sudo cp $FILE aarch64-linux-gnu_EGL.conf
 
+Now `update-initramfs` will no longer complain about this when run:
+
     $ sudo update-initramfs -c -k all
 
-Warning: couldn't identify filesystem type for fsck hook, ignoring.
+The second error is a bit harder to resolve:
+
+    Warning: couldn't identify filesystem type for fsck hook, ignoring.
+
+This is because `/etc/fstab` uses `/dev/root`, which is fine, but `/dev/root` doesn't really exist under `/dev` which confuses one of the `initramfs` tools:
 
     $ cat /etc/fstab
     $ ls /dev/root
     ls: cannot access '/dev/root': No such file or directory
+
+To fix this:
+
     $ sudo vim /usr/share/initramfs-tools/scripts/functions
 
 Find the following two lines:
@@ -46,13 +66,17 @@ And immediately before them add in the following:
         DEV="$(findmnt -n -o SOURCE /)"
         ;;
 
-https://bootlin.com/blog/find-root-device/
+The `findmnt` comes from the Bootlin blog entry about [finding the root device](https://bootlin.com/blog/find-root-device/).
+
+Now `update-initramfs` should complete without error:
 
     $ sudo update-initramfs -c -k all
 
+If you look at the `syslog` you'll see lots of errors referring to `nvrm`:
+
     $ fgrep nvrm /var/log/syslog
 
-This may be resolved by adding a camera.
+Apparently these go away once you've added a camera.
 
 The system doesn't seem particularly responsive but installing and running `htop` doesn't show anything unexpected.
 
@@ -60,7 +84,8 @@ The screen handling seems surprisingly poor given that the system is using nVidi
 
 I had to turn off overscan on my TV otherwise the edges of the desktop were offscrean. Overscan seems to be the default on some older TVs but really it should never be on - see this [thread](https://devtalk.nvidia.com/default/topic/1027349/jetson-tx2/display-does-not-fit-properly/). On my Samsung TV disabling overscan involves setting it the picture to "screen fit" - select Menu on the remote control, then select Picture, go down and select Screen Adjustment, then Picture Size and change it to Screen Fit.
 
----
+WiFi
+----
 
 See [`jetson-nano-wifi.md`](jetson-nano-wifi.md) then...
 
@@ -68,25 +93,29 @@ Once you've plugged back in the keyboad, mouse and HDMI connector - but not the 
 
 Just go Networks (upper right, beside volume etc. in the system menu bar) and select your WiFi network.
 
-----
+Sound
+-----
 
 By default the sound goes to the built-in analog output - it's not clear where this goes as the development board has no audio jack. Perhaps it goes out as I2S on the GPIO header - in which case you'd need something like Adafruit's [I2S breakout](https://www.adafruit.com/product/3006). How audio-in is handled is another matter. Perhaps looking at how things are done with the Snips [dev kit](https://docs.snips.ai/the-maker-kit/dev-kit) would provide some pointers - it uses a [ReSpeaker 2-Mics Pi HAT](http://wiki.seeedstudio.com/ReSpeaker_2_Mics_Pi_HAT/) that features two microphones and a connector for a speaker. Note that this HAT also features various other fairly random extras - two grove connectors, RGBs and a push button.
 
 To get audio out via HDMI Settings / Sound and just select "HDMI / DisplayPort" rather than "Analog Output".
 
----
+Chrome
+------
 
 Chrome's tendency to gobble all available resources quickly causes the Jetson Nano to grind to a halt - so probably best to keep open tabs to a minimum.
 
----
+Reference documetation
+----------------------
 
 Under `/media/$USER/L4T-README` you'll find various interesting files about Linux for Tegra. It's not clear what's mounting this virtual drive. In there you'll find instructions about things like USB dev mode - like the Intel Edison, it looks like you can connect the board via USB to your main system and then run ethernet over USB and then run VNC on the Jetson Nano and interact with it that way.
 
 Other Jetson specific stuff can be found under `/opt/nvidia`.
 
----
+Plain VNC on the Nano
+---------------------
 
-It would be nice to use the Jetson Nano via VNC however this seems largely broken.
+Using the usual Ubuntu VNC setup on the Nano seems largely broken. This following covers fixing it up such that things work - but there's a far better solution later (which doesn't involve mirroring the real display).
 
 It you go to Settings / Desktop Sharing it just crashes.
 
@@ -96,13 +125,13 @@ Vino is installed - you can find it under `/usr/lib/vino` and you can see what k
 
     $ gsettings list-recursively org.gnome.Vino
 
-The issue is covered in Ubuntu [bug 1741027](https://bugs.launchpad.net/ubuntu/+source/unity-control-center/+bug/1741027/) - they claim to have fixed this in November 2018 but it still seems to be present.
+The issue is covered in Ubuntu [bug 1741027](https://bugs.launchpad.net/ubuntu/+source/unity-control-center/+bug/1741027/) - they claim to have fixed this in November 2018 but it still seems to be present here.
 
-This post nVidia [forum post](https://devtalk.nvidia.com/default/topic/1042018/jetson-agx-xavier/setting-up-vnc-server-solved-/) points to the only solution I got to work.
+This post nVidia [forum post](https://devtalk.nvidia.com/default/topic/1042018/jetson-agx-xavier/setting-up-vnc-server-solved-/) points to the only solution I got to work:
 
     $ sudo vim /usr/share/glib-2.0/schemas/org.gnome.Vino.gschema.xml
 
-Add the enabled key as described [here](https://bugs.launchpad.net/ubuntu/+source/unity-control-center/+bug/1741027/comments/11).
+Add then add back in the `enabled` key as described [here](https://bugs.launchpad.net/ubuntu/+source/unity-control-center/+bug/1741027/comments/11).
 
     $ sudo glib-compile-schemas /usr/share/glib-2.0/schemas
 
@@ -141,7 +170,7 @@ Neither did setting up a systemd service as outlined in this [AskUbuntu answer](
 
 But maybe `After` just needs to be set such that the display is actually available by the point this service is run.
 
-In the end I just ssh-ed in to the device:
+In the end I just ssh-ed in to the device and started the `vino-server` whenever I needed it:
 
     $ ssh my-username@JetsonNano.local
     $ export DISPLAY=:0
@@ -151,11 +180,8 @@ However the Jetson Nano has to actually be connected to a screen via HDMI otherw
 
 On my Ubuntu box I used `remote-viewer` to connect to `vnc://JetsonNano.local:5900` - it works but the performance is so poor as to make the whole things rather pointless.
 
----
-
-Perhaps [x11vnc](https://help.ubuntu.com/community/VNC/Servers#x11vnc) or one of the other VNC servers that don't share a real display would be the way to go. See also this [trouble shooting section](https://wiki.archlinux.org/index.php/X11vnc#Troubleshooting) on using x11vnc with Gnome 3.
-
----
+Headless Nano
+-------------
 
 Preventing the graphical interface from starting just requires setting the default target to boot into to `multi-user.target`. You can see the current target, see the chain of units and set the target to `multi-user.target` like so:
 
@@ -224,7 +250,8 @@ Looking at the `available` column you can see the difference is 561M of your 395
 
 And now the biggest thing running is the `nvargus-daemon` with a RSS of just 19M.
 
----
+Better VNC setup
+----------------
 
 Rather than viewing the real display remotely with the default VNC server, which performed terribly, I found using TigerVNC with its own virtual display was infinitely better for remote graphical access to the Jetson Nano.
 
@@ -314,95 +341,3 @@ To change this:
     $ sudo /var/lib/polkit-1/localauthority/50-local.d/org.freedesktop.NetworkManager.pkla
 
 And change `org.freedesktop.NetworkManager.settings.modify.system` to `org.freedesktop.NetworkManager.network-control`. Note: the original `org.freedesktop.NetworkManager.pkla`, that's copied, is just being used as a template for enabling what we need, i.e. `network-control`. See this [blog entry](https://lauri.xn--vsandi-pxa.com/cfgmgmt/polkit.html) on Polkit for more details.
-
----
-
-GStreamer
-=========
-
-Intro the GStreamer and Jetson by Peter Moran - <http://petermoran.org/csi-cameras-on-tx2/>
-
----
-
-Introduction to the GStreamer tools - <https://gstreamer.freedesktop.org/documentation/tutorials/basic/gstreamer-tools.html>
-
-When looking at GStreamer examples it was obvious that a pipeline of tools (called elements) were involved but I didn't understand the bits that seem to be just text strings:
-
-    $ gst-launch-1.0 nvcamerasrc ! 'video/x-raw(memory:NVMM), width=(int)1920, height=(int)1080, format=(string)I420, framerate=(fraction)60/1' ! nvvidconv ! 'video/x-raw(memory:NVMM), format=(string)I420' ! nvoverlaysink -e
-
-I.e. the bits like `'video/x-raw(memory:NVMM), ...'` - these are [caps filters](https://gstreamer.freedesktop.org/documentation/tutorials/basic/gstreamer-tools.html#caps-filters).
-
-According to the documentation you can achieve the same with [named pads](https://gstreamer.freedesktop.org/documentation/tutorials/basic/gstreamer-tools.html#pads).
-
-TODO: see if named pads allow for simpler specification of what you want, i.e. use `gst-inspect-1.0` to find out the named pads supported by e.g. `nvcamerasrc` and use one of these rather than a big long string.
-
-Elements have capabilities - see <https://gstreamer.freedesktop.org/documentation/tutorials/basic/media-formats-and-pad-capabilities.html>
-
-Elements in a pipeline can produce a whole load of outputs and accept a whole load of inputs - to see an element's sink and source cap(abilities) do:
-
-    $ gst-inspect-1.0 videotestsrc
-    $ gst-inspect-1.0 videoconvert
-
-The process by which each of the elements decide on the formats to be used is called caps negotiation - negotiation is covered in a [design section](https://gstreamer.freedesktop.org/documentation/design/negotiation.html) and in a [development section](https://gstreamer.freedesktop.org/documentation/plugin-development/advanced/negotiation.html).
-
-Taking this pipeline:
-
-    $ gst-launch-1.0 videotestsrc ! videoconvert ! autovideosink
-
-Each element supports various capabilities with XXX (what's the name for `format`, `width` etc? Properties?) that can take many values.
-
-It would be interesting to know how exactly the above pipeline settles on:
-
-    video/x-raw, width=320, height=240, framerate=30/1, format=YUY2, pixel-aspect-ratio=1/1, interlace-mode=progressive 
-
-You can see the process and what's settled on with `gst-launch-1.0 -v`.
-
-TODO: what is `-v` actually showing - it doesn't look much like negotiation but it looks like more than just a dump of final choices.
-
-You can get some insight into the process with [pipeline graphs](https://gstreamer.freedesktop.org/documentation/tutorials/basic/debugging-tools.html#getting-pipeline-graphs).
-
-Generate a series of graphs:
-
-    $ mkdir dots
-    $ export GST_DEBUG_DUMP_DOT_DIR=$PWD/dots
-    $ gst-launch-1.0 videotestsrc ! videoconvert ! autovideosink
-
-Kill `gst-launch` and look at the graphs use `xdot`:
-
-    $ sudo apt install xdot
-    $ for file in dots/*; do xdot $file; done
-
-Xdot doesn't have much in the way of a user interface - the author also suggests ZGRViewer in the [links section](https://github.com/jrfonseca/xdot.py#links) of the xdot github page, ZGRViewer is a moribund project (unlike xdot which is actively developed) that provides a Java viewer, that still works fine despite no updates since 2015. While _looking_ far fancier it doesn't seem to offer any additional features over xdot when it comes to the pipeline graphs and for this situation is actually less convenient to use.
-
----
-
-JetsonHacks has a nice simple [github repo](https://github.com/JetsonHacksNano/CSI-Camera) for getting started with a CSI camera on the Nano.
-
-It covers using `v4l2-ctl` to list what the camera is capable of.
-
-TODO: what other useful V4L2 tools are there?
-
-TODO: this repo uses the element `nvarguscamerasrc` while other pages (including Peter Moran) use `nvcamerasrc` - what's the difference? And how's it different to using `v4l2src device=/dev/video0` - you can see `v4l2src` and `nvcamerasrc` being used [here](https://devtalk.nvidia.com/default/topic/1037844/jetson-tx2/capture-raw-video-through-gstreamer-with-csi-cameras/) to achieve the same affect with a Jetson TX2.
-
----
-
-Peter Moran's page links to the eLinux Jetson/Cameras [wiki page](https://elinux.org/Jetson/Cameras) which keeps track of supported cameras - for CSI cameras for the Nano it's basically just:
-
-* The Raspberry Pi V2 camera module - $25
-* The Leopard Imaging [LI-IMX219-MIPI-FF-NANO](https://leopardimaging.com/product/li-imx219-mipi-ff-nano/) - $29
-* The e-Con systems [e-CAM30_CUNANO](https://www.e-consystems.com/nvidia-cameras/jetson-nano-cameras/3mp-mipi-camera.asp) - US$79
-
----
-
-See RidgeRun's very detailed wiki pages on working with GStreamer on Jetson boards:
-
-* [TX1](https://developer.ridgerun.com/wiki/index.php?title=Gstreamer_pipelines_for_Jetson_TX1)
-* [TX2](https://developer.ridgerun.com/wiki/index.php?title=Gstreamer_pipelines_for_Jetson_TX2)
-
-These cover many more tools than just GStreamer. Are they essentially identical?
-
----
-
-nVidia [multimedia user guide](https://developer.download.nvidia.com/embedded/L4T/r24_Release_v2.0/Docs/L4T_Tegra_X1_Multimedia_User_Guide_Release_24.2.pdf) - how you find the latest version I don't know, googling throws up various versions but no obvious page that links to the _latest_ version.
-
-Maybe you can get there somehow via the [JetPack sub-site](https://developer.nvidia.com/embedded/jetpack), e.g. via a direct link Google isn't picking up or indirectly via a link in a PDF available there. Or via the the [developer zone](https://developer.nvidia.com/embedded-computing).
