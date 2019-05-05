@@ -112,7 +112,7 @@ The camera sensor supports a number of modes with various resolutions and frame 
 
 [Binning](https://www.ubergizmo.com/what-is/pixel-binning-camera/) that multiple sensor pixels are combined to form one super pixel to reduce noise. This can be useful in low light situations (but whether it outways the loss in resolution depends on the situation).
 
-Anyway 640x480 was chosen for these examples just because it was convenient to work with small video windows when experimenting with various settings etc. and not because of binning.
+Anyway 640x480 was chosen for these examples not because it's better than other modes, you should chose the mode based on what you want. I was working in a relatively low-light setting and also it was convenient to work with a small video window when experimenting with various settings etc. And importantly 640x480 is one of the modes that uses the full sensor.
 
 Hardware limitations
 --------------------
@@ -210,13 +210,45 @@ Then on the Pi the same as above. This time the video looks good but there is a 
 V4L on Raspberry Pi
 -------------------
 
-[Video4Linux](https://en.wikipedia.org/wiki/Video4Linux) (V4L) is a standard API for interacting with video devices and it would be nice to use it and avoid Raspberry Pi specific tools like `raspivid`. V4L was not available on the Raspberry Pi when it was first launched (and tools like `raspivid` do not use it) but support for it was introduced [eventually](https://www.raspberrypi.org/forums/viewtopic.php?t=62364). My experience though with using V4L on the Raspberry Pi was that it was fairly flakey and `raspivid` behaved far more consistently, without error or problems.
+[Video4Linux](https://en.wikipedia.org/wiki/Video4Linux) (V4L) is a standard API for interacting with video devices and using it avoid tying yourself to Raspberry Pi specific tools like `raspivid`. V4L was not available on the Raspberry Pi when it was first launched (and tools like `raspivid` do not use it) but support for it was introduced [eventually](https://www.raspberrypi.org/forums/viewtopic.php?t=62364). Note that V4L is at version 2, hence the `v4l2` seen in many places.
 
-However here are my notes on using it - V4L is at version 2, so everywhere you'll see V4L2 from now on.
+My initial experience of using V4L on the Raspberry Pi was marred by trying to use it with VLC. This led me to believe it was flakey and unreliable but really the problem was VLC. VLC may be an excellent media player on most platforms but it does not seem to play well with V4L and live video on Raspberry Pi. I've moved out my notes on using VLC to stream from the Pi into [`pi-vlc-v4l.md`](pi-vlc-v4l.md) but I would not recommend using it in this situation.
 
-By default the V4L2 module is not loaded and there is no corresponding `/dev/video0` device. Loading the module (and creating the device) you need to do:
+By default the V4L module is not loaded and there is no corresponding `/dev/video0` device. To load the module (and create the device) you need to do:
 
     $ sudo modprobe bcm2835-v4l2
+
+V4L is certainly not as bulletproof as `raspivid` and sometimes you may need to reload the module like so:
+
+    $ rmmod bcm2835-v4l2 ; modprobe bcm2835-v4l2
+
+Now let's jump straight into streaming video from the Pi with GStreamer:
+
+    $ v4l2-ctl --vertical_flip=1
+    $ gst-launch-1.0 v4l2src ! 'video/x-h264, width=640, height=480, framerate=42/1' ! h264parse ! rtph264pay config-interval=1 pt=96 ! gdppay ! tcpserversink host=0.0.0.0 port=9090
+
+Then on your local machine:
+
+    $ gst-launch-1.0 tcpclientsrc host=raspberrypi.local port=9090 ! gdpdepay ! rtph264depay ! avdec_h264 ! videoconvert ! autovideosink sync=false
+
+Setting the video format with v4l2-ctl
+--------------------------------------
+
+Above it's GStreamer that sets the width, height etc. Just as it's possible to set the camera's vertical flip settings it's also possible to set these other values via `v4l2-ctl`:
+
+    $ v4l2-ctl --set-fmt-video=width=640,height=480,pixelformat=4
+
+The `width` and `height` values are obvious enough, but what about `pixelformat`? It's value is one of the index values displayed by:
+
+    $ v4l2-ctl --list-formats
+
+So 4 turns out to mean H.264.
+
+However this is all a bit academic as GStreamer ignores these values and sets its own. If you don't set width, height and framerate then it defaults to 320x200 at 90fps.
+
+Why it overrides these values but respects e.g. vertical flip, I don't know.
+
+---
 
 Then you can display all supported video formats including frame sizes:
 
@@ -226,57 +258,20 @@ And then list the supported FPS range for a given format and dimensions:
 
     $ v4l2-ctl --list-frameintervals=width=2592,height=1944,pixelformat=BGR4
 
-Note: `cvlc` is VLC without a UI.
 
-To stream:
+Loading V4L module on startup
+-----------------------------
 
-    $ cvlc v4l2:///dev/video0 --v4l2-width 1920 --v4l2-height 1080 --v4l2-chroma h264 --sout '#standard{access=http,mux=ts,dst=:9090}'
+To automatically load the V4L module at startup do:
 
-Among other output you see:
+    $ echo bcm2835-v4l2 | sudo tee /etc/modules-load.d/v4l2.conf
 
-    [0175f108] vlcpulse audio output error: PulseAudio server connection failure: Connection refused
-    [01758840] dbus interface error: Failed to connect to the D-Bus session daemon: Unable to autolaunch a dbus-daemon without a $DISPLAY for X11
-    [016fe110] main libvlc error: interface "dbus,none" initialization failed
+Taken from the [automatic module loading](https://wiki.archlinux.org/index.php/Kernel_module#Automatic_module_loading_with_systemd) section of ArchLinux page on modules.
 
-It's possible to get rid of the PulseAudio audio error with `--aout dummy` and the D-Bus error with `--no-dbus`. So you end up with:
+v4l2-ctl settings
+-----------------
 
-    $ cvlc --aout dummy --no-dbus v4l2:///dev/video0 --v4l2-width 1920 --v4l2-height 1080 --v4l2-chroma h264 --sout '#standard{access=http,mux=ts,dst=:9090}'
-    VLC media player 3.0.6 Vetinari (revision 3.0.6-0-g5803e85f73)
-    [00103288] main interface error: no suitable interface module
-    [0009a110] main libvlc error: interface "globalhotkeys,none" initialization failed
-    [001032f0] dummy interface: using the dummy interface module...
-
-After much searching there seems to be no way to get rid of the `main interface error` and the `main libvlc error` - they seem to be just warnings rather than errors.
-
-So if all has gone well this will stream video on port 9090.
-
-Then on the receiving machine you can start VLC, go to Media / Open Network Stream... and enter the URL `http://raspberrypi.local:9090`.
-
-The video stream takes a few seconds to start playing and then lags behind reality by a similar amount of time.
-
-Totem, the default player on Ubuntu, works just as well - as do presumably a plethora of other Linux media players. Note that totem uses GStreamer under the covers.
-
-Often on killing and restarting `cvlc` I'd see the error:
-
-    [0071a0b8] v4l2 demux error: cannot start streaming: Operation not permitted
-    [0071a0b8] v4l2 demux error: not a radio tuner device
-
-The seems to be a consequence of VLC not releasing the `/dev/video0` device properly. The only solution to this seemed to be to remove and reload the underlying `bcm2835-v4l2` module like so:
-
-    $ rmmod bcm2835-v4l2 ; modprobe bcm2835-v4l2
-
-Extremely frequently I also saw the error:
-
-    [0093ac18] main decoder error: buffer deadlock prevented
-
-There seemed to be no solution to this other than to repeatedly remove and reload the `bcm2835-v4l2` module as above and restart `cvlc` until eventually it started without this error. The error seems to imply that something has been prevented (and therefore the situation is now OK) but this seems to be a serious error - no streaming occurs if this error appears.
-
-Either my hardware or the v4l2 driver seemed to be very flakey when used like this.
-
-V4L notes
----------
-
-You can see the current settings that V4L2 can display like so:
+You can see the current settings that V4L can display like so:
 
     $ v4l2-ctl --all
 
@@ -303,3 +298,22 @@ Make sure to ssh into your Pi with X11 forwarding enabled, i.e. use `-X`:
 You'll see the control panel pop up on your local system (assuming there's a local X server). However before you get to that point it'll complain, with a long stream of popups, about situations like the one seen above where there's no menu text for the auto-exposure values 2 and 3 - with each popup saying something like ""Unable to get menu item for Auto Exposure, index=2. Will use unknown".
 
 To be honest I find the text output of `v4l2-ctl` more digestable.
+
+**Update:** after getting used to the camera and knowing what to look for I did start to find `v4l2ucp` a bit useful. The first important thing to realize is that the layout is messed up. Things are meant to be laid out row-wise into a number of sections:
+
+* User controls
+* Codec controls
+* Camera contols
+* Auto exposure, bias
+* ISO sensitivity
+* JPEG compression controls
+
+But the layout is messed - you have to mentally see every Reset button as marking the end of a row. Once you realize this you can scan down the named settings and spot things such as vertical flip that you may have missed trying to read through the text output of `v4l2-ctl`.
+
+References
+----------
+
+There's a lot of stale information about the Pi camera out there. But there are some good references:
+
+* The official documentation for the [Pi camera applications](https://www.raspberrypi.org/documentation/raspbian/applications/camera.md).
+* The Picamera [hardware page](https://picamera.readthedocs.io/en/release-1.12/fov.html).
