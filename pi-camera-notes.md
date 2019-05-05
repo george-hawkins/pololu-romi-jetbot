@@ -1,31 +1,14 @@
 Using the camera module with the Raspberry Pi
 =============================================
 
-IP addresses
-------------
+Below I'm always ssh-ed into the Raspberry Pi from my workstation (running Ubuntu), so `raspberrypi.local` is the name of the remote Pi and `${SSH_CLIENT%% *}` is the address of my workstation, i.e. my local machine. When you ssh into the Pi the environment variable `SSH_CLIENT` is set:
 
-The Raspberry Pi advertises its IP address on your local network using [Avahi](https://en.wikipedia.org/wiki/Avahi_(software)) - so you can generally connect to it using the name `raspberrypi.local` rather than a raw IP address like 192.168.0.66. I've used `raspberrypi.local` all through this page but you _may_ need to use the actual IP address of your Pi. There are no end of ways of determining this, e.g. see this [SO answer](https://stackoverflow.com/questions/13322485/how-to-get-the-primary-ip-address-of-the-local-machine-on-linux-and-os-x). The most common suggestion is:
+    $ echo $SSH_CLIENT
+    192.168.0.241 48232 22
 
-    $ ifconfig
-    eth0: flags=4099<UP,BROADCAST,MULTICAST>  mtu 1500
-            ether b8:27:eb:a0:96:ba  txqueuelen 1000  (Ethernet)
-            ...
+So `${SSH_CLIENT%% *}` just strips away everything except the IP address.
 
-    lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
-            inet 127.0.0.1  netmask 255.0.0.0
-            ...
-
-    wlan0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
-            inet 192.168.0.66  netmask 255.255.255.0  broadcast 192.168.0.255
-            ...
-
-And look for `inet` either under `wlan0` if you're using WiFi (as above) or under `eth0` if you're using ethernet.
-
-Below I'm always ssh-ed into the Raspberry Pi from my laptop, so `raspberrypi.local` is the name of the remote Pi and wherever you see `$MY_IP_ADDR` that's the address of my laptop, i.e. my local machine. So you need to replace `$MY_IP_ADDR` with the address of your local machine or first set `MY_IP_ADDR` to the address of your machine:
-
-    $ MY_IP_ADDR=192.168.0.241
-
-Obviously replace `192.168.0.241` with the value appropriate to your machine.
+The Raspberry Pi advertises its IP address on your local network using [Avahi](https://en.wikipedia.org/wiki/Avahi_(software)) - so you can generally connect to it using the name `raspberrypi.local` rather than a raw IP address like 192.168.0.66. However you _may_ need to use the actual IP address of your Pi. There are no end of ways of determining this, e.g. see this [SO answer](https://stackoverflow.com/questions/13322485/how-to-get-the-primary-ip-address-of-the-local-machine-on-linux-and-os-x).
 
 Connecting the camera module
 ----------------------------
@@ -40,32 +23,25 @@ Now push the top of the connector back into place, boot the Pi and run:
 
 Select Interfacing Options, then select the Camera and go thru the obvious steps to enable it.
 
-Various pages note that `gpu_mem` must be at least 32M with 128M recommended - if you look in `/boot/config.txt` you see that 128M is the pre-configured default. So this hardly seems worth mentioning but maybe at one stage the default for `gpu_mem` was lower. TODO: check if `gpu_mem` is maybe updated to 128M from a lower value when setting up the camera with `raspi-config`.
+Various pages note that when using the camera the `gpu_mem` must be at least 32M with 128M recommended - if you look in `/boot/config.txt` you see that 128M is the pre-configured default. Maybe at one stage the default for `gpu_mem` was lower (otherwise it hardly seems worth mentioning). TODO: check if `gpu_mem` is maybe updated to 128M from a lower value when setting up the camera with `raspi-config`.
 
 Camera modes and FoV
 --------------------
 
-Remember that the [Waveshare fisheye camera](https://www.waveshare.com/rpi-camera-g.htm) uses the older OV5647 sensor of the version 1 Raspberry Pi camera.
+For all the examples here I've used a [Waveshare fisheye camera](https://www.waveshare.com/rpi-camera-g.htm) that uses the older OV5647 sensor of the Raspberry Pi camera module V1.
 
-So it has the modes listed for the OV5647 in Raspberry Pi [documentation](https://www.raspberrypi.org/documentation/raspbian/applications/camera.md).
+So the modes used below correspond to those listed for the OV5647 in Raspberry Pi [documentation](https://www.raspberrypi.org/documentation/raspbian/applications/camera.md).
 
-But the Picamera (python library) documentation has a much better [overview](https://picamera.readthedocs.io/en/release-1.12/fov.html) or the modes with pictures showing the FoV of the older OV5647 sensor and the newer IMX219 sensor.
+**Update:** the Picamera (python library) documentation has a much better [overview](https://picamera.readthedocs.io/en/release-1.12/fov.html) of the modes with pictures showing the FoV of the older OV5647 sensor and the newer IMX219 sensor.
 
-Raspivid overlay
-----------------
-
-You can get `raspivid` to overlay values like the current time using the `-a` flag. To overlay all possible values use `-a 1023`:
-
-    $ raspivid -a 1023 ...
-
-For the individual values, e.g. 64 for gain settings, see the Pi [camera documentation](https://www.raspberrypi.org/documentation/raspbian/applications/camera.md).
+For the V2 camera module just replace `-md 6 -w 640 -h 480`, wherever you see it, with `-md 5 -w 1640 -h 922` (this is the V2 mode with the best FoV that can still be handled by the hardware H.264 encoder).
 
 Streaming using raspivid
 ------------------------
 
-Initially I wanted to use V4L (see the later sections covering its usage) but streaming with `raspivid` proved far less error prone than using V4L - it could be killed and restarted repeatedly without any issues.
+I started out using V4L (see the later sections covering its usage) with VLC but streaming with `raspivid` proved far simpler. It was only after I got used to using the camera via `raspivid` that I moved back to trying a pure GStreamer pipline with V4L. Even though I did eventually get GStreamer working well with V4L I have to say `raspivid` is still much easier to work with and provides more direct control of the camera, e.g. you can set the camera sensor modes directly (with `-md`) and set things like flicker avoidance which are not available via V4L.
 
-On the Pi:
+Let's start straight in on setting up `raspivid` to stream on the Pi:
 
     $ raspivid -v -n -t 0 -md 6 -w 640 -h 480 -fps 42 -fli auto -vf -l -o tcp://0.0.0.0:9090
 
@@ -99,6 +75,15 @@ TODO: I'd like to know what's going on here - it I set both sides to 30 FPS I ge
 Oddly no matter what the setting lag seems to appear and disappear over time even if there's no lag initially.
 
 Note: `9090` is a randomly used port number, I use it consistently here but one can chose any number above 1023 (the ports below are reserved for privileged services) and below 65536 and which aren't already being used by something else (actually the range 1024 to 49151 is best as ports above 49151 are used for dynamic ports so they may randomly be taken at any given time).
+
+Raspivid overlay
+----------------
+
+You can get `raspivid` to overlay values like the current time using the `-a` flag. To overlay all possible values use `-a 1023`:
+
+    $ raspivid -a 1023 ...
+
+For the individual values, e.g. 64 for gain settings, see the Pi [camera documentation](https://www.raspberrypi.org/documentation/raspbian/applications/camera.md).
 
 Flicker avoidance
 -----------------
@@ -138,7 +123,7 @@ First on your local machine start netcat so it will listen for a connection from
 
 Then on the Pi start `raspivid` and pipe its output to netcat such that it forwards it to your local machine:
 
-    $ raspivid -v -n -t 0 -md 6 -w 640 -h 480 -fps 42 -fli auto -vf -o - | nc $MY_IP_ADDR 9090
+    $ raspivid -v -n -t 0 -md 6 -w 640 -h 480 -fps 42 -fli auto -vf -o - | nc ${SSH_CLIENT%% *} 9090
 
 In the above setup it's the MPlayer side that waits (and must be started first). You can switch it around and start the Pi side first such that it waits for a connection from the local machine:
 
@@ -157,17 +142,17 @@ The nice thing with this setup though is that you can tell netcat on the Pi side
 GStreamer
 ---------
 
-[GStreamer](https://en.wikipedia.org/wiki/GStreamer) is a multimedia framework that on other systems, in combination with V4L, is often used to do the kind of things we've been doing here with `raspivid`. GStreamer is a set of libraries and tools - here we'll use some of those tools in combination with `raspivid` on the Pi side to stream video to GStreamer tools on your local machine.
+[GStreamer](https://en.wikipedia.org/wiki/GStreamer) is a multimedia framework that on other systems, in combination with V4L, is often used to do the kind of things we've been doing here with `raspivid`. GStreamer is a set of libraries and tools - here we'll use some of those tools in combination with `raspivid` on the Pi side to stream video to GStreamer tools on your local machine. Later we'll come to using it with V4L and without `raspivid`.
 
 Install GStreamer on the Pi as per the GStreamer [installation guide](https://gstreamer.freedesktop.org/documentation/installing/on-linux.html). Oddly there isn't one single package that pulls in all necessary dependencies. Instead you install a long list of dependencies - on trying to install all of them on the Pi it tells you that some of them don't exist (`gstreamer1.0-qt5`, `gstreamer1.0-gtk3` and `gstreamer1.0-gl`) so just leave them out and try again.
 
 Then on the Pi to stream data via `gst-launch-1.0`:
 
-    $ raspivid -v -n -t 0 -md 6 -w 640 -h 480 -fps 42 -fli auto -vf -o - | gst-launch-1.0 fdsrc !  h264parse ! rtph264pay config-interval=1 pt=96 ! udpsink host=$MY_IP_ADDR port=9090
+    $ raspivid -v -n -t 0 -md 6 -w 640 -h 480 -fps 42 -fli auto -vf -o - | gst-launch-1.0 fdsrc !  h264parse ! rtph264pay config-interval=1 pt=96 ! udpsink host=${SSH_CLIENT%% *} port=9090
 
 On the local machine:
 
-    $ gst-launch-1.0 udpsrc port=9090 caps='application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264' ! rtph264depay ! avdec_h264 ! videoconvert ! autovideosink sync=false
+    $ gst-launch-1.0 -v udpsrc port=9090 caps='application/x-rtp, media=video, clock-rate=90000, encoding-name=H264' ! rtph264depay ! avdec_h264 ! videoconvert ! autovideosink sync=false
 
 This example uses UDP which has two nice properties:
 
@@ -199,7 +184,7 @@ First on the local machine:
 
 Then on the Pi:
 
-    $ raspivid -v -n -t 0 -md 6 -w 640 -h 480 -fps 42 -fli auto -vf -o udp://$MY_IP_ADDR:9090
+    $ raspivid -v -n -t 0 -md 6 -w 640 -h 480 -fps 42 -fli auto -vf -o udp://${SSH_CLIENT%% *}:9090
 
 The lower half of the image appears to be melting but there is no significant lag. Now with VLC on the local machine:
 
@@ -231,33 +216,54 @@ Then on your local machine:
 
     $ gst-launch-1.0 tcpclientsrc host=raspberrypi.local port=9090 ! gdpdepay ! rtph264depay ! avdec_h264 ! videoconvert ! autovideosink sync=false
 
+Note: starting `gst-launch-1.0` with `-v` can often be useful in getting some insight into the cap filter streams that you need to set, e.g. `video/x-h264, ...` above.
+
 Setting the video format with v4l2-ctl
 --------------------------------------
 
 Above it's GStreamer that sets the width, height etc. Just as it's possible to set the camera's vertical flip settings it's also possible to set these other values via `v4l2-ctl`:
 
-    $ v4l2-ctl --set-fmt-video=width=640,height=480,pixelformat=4
+    $ v4l2-ctl --set-parm=42
+    $ v4l2-ctl --set-fmt-video=width=640,height=480,pixelformat=H264
 
-The `width` and `height` values are obvious enough, but what about `pixelformat`? It's value is one of the index values displayed by:
+`parm` means FPS in V4L's rather strange vernacular. The `pixelformat` value needs to be one of the values displayed by:
 
     $ v4l2-ctl --list-formats
-
-So 4 turns out to mean H.264.
 
 However this is all a bit academic as GStreamer ignores these values and sets its own. If you don't set width, height and framerate then it defaults to 320x200 at 90fps.
 
 Why it overrides these values but respects e.g. vertical flip, I don't know.
 
----
+Further v4l2-ctl usage
+----------------------
 
 Then you can display all supported video formats including frame sizes:
 
     $ v4l2-ctl --list-formats-ext
 
-And then list the supported FPS range for a given format and dimensions:
+As you can see, on the Pi at least, it's not terribly useful - for each format it just lists one value - the sensor's pixel dimensions.
 
-    $ v4l2-ctl --list-frameintervals=width=2592,height=1944,pixelformat=BGR4
+Then for a format and dimensions you can list the supported FPS range:
 
+    $ v4l2-ctl --list-frameintervals=width=2592,height=1944,pixelformat=H264
+
+Again the output isn't terribly useful - it just seems to list `1-90 fps` for everything. You're better off working with the values shown in the Picamera [documentation](https://picamera.readthedocs.io/en/release-1.12/fov.html#camera-modes) for the various sensor modes.
+
+OK - now onto more useful output. You can see the current V4L settings like so:
+
+    $ v4l2-ctl --all
+
+You can see e.g. the range of values and the current value for auto-exposure:
+
+    auto_exposure (menu)   : min=0 max=3 default=0 value=0
+
+Some settings are marked `(int)` meaning they just take a simple integer value, e.g. brightness takes any value from 0 to 100.
+
+For the ones that are marked `(menu)`, like auto-exposure above, you can see what the numeric values, in this case 0 to 3, mean like so:
+
+    $ v4l2-ctl --list-ctrls-menus
+
+This enumerates the menus for all `(menu)` settings, so for auto-exposure you see that 0 is 'Auto Mode' and 1 is 'Manual Mode' (oddly there's no items for the additional acceptable values 2 and 3).
 
 Loading V4L module on startup
 -----------------------------
@@ -268,26 +274,10 @@ To automatically load the V4L module at startup do:
 
 Taken from the [automatic module loading](https://wiki.archlinux.org/index.php/Kernel_module#Automatic_module_loading_with_systemd) section of ArchLinux page on modules.
 
-v4l2-ctl settings
------------------
+Video4Linux2 universal control panel
+------------------------------------
 
-You can see the current settings that V4L can display like so:
-
-    $ v4l2-ctl --all
-
-You can see e.g. the range of values and the current value for auto-exposure:
-
-    auto_exposure (menu)   : min=0 max=3 default=0 value=0
-
-Some settings are marked `(int)` meaning they just take a simple integer value, e.g. brightness takes any value from 0 to 100.
-
-For the ones that are marked `(menu)` like auto-exposure above you can see what the numerica values, in this case 0 to 3, mean like so:
-
-    $ v4l2-ctl --list-ctrls-menus
-
-This enumerates the menus for all `(menu)` settings, so for auto-exposure you see that 0 is 'Auto Mode' and 1 is 'Manual Mode', oddly there's no items for the additional acceptable values 2 and 3.
-
-To see all this data presented in a UI you can use the [Video4Linux2 Universal Control Panel](http://manpages.ubuntu.com/manpages/disco/man1/v4l2ucp.1.html).
+To see all this data presented by `v4l2-ctl` in a UI you can use the [Video4Linux2 universal control panel](http://manpages.ubuntu.com/manpages/disco/man1/v4l2ucp.1.html).
 
 Make sure to ssh into your Pi with X11 forwarding enabled, i.e. use `-X`:
 
@@ -295,11 +285,11 @@ Make sure to ssh into your Pi with X11 forwarding enabled, i.e. use `-X`:
     $ sudo apt install v4l2ucp
     $ v4l2ucp /dev/video0
 
-You'll see the control panel pop up on your local system (assuming there's a local X server). However before you get to that point it'll complain, with a long stream of popups, about situations like the one seen above where there's no menu text for the auto-exposure values 2 and 3 - with each popup saying something like ""Unable to get menu item for Auto Exposure, index=2. Will use unknown".
+You'll see the control panel pop up on your local system. However before you get to that point it'll complain, with a long stream of popups, about situations like the one seen up above (when discussing `(menu)`) where there's no menu text for the auto-exposure values 2 and 3 - with each popup saying something like ""Unable to get menu item for Auto Exposure, index=2. Will use unknown".
 
 To be honest I find the text output of `v4l2-ctl` more digestable.
 
-**Update:** after getting used to the camera and knowing what to look for I did start to find `v4l2ucp` a bit useful. The first important thing to realize is that the layout is messed up. Things are meant to be laid out row-wise into a number of sections:
+**Update:** after getting used to the camera and knowing what to look for I did find `v4l2ucp` a bit useful. The first important thing to realize is that the layout is messed up. Things are meant to be laid out row-wise into a number of sections:
 
 * User controls
 * Codec controls
@@ -308,7 +298,7 @@ To be honest I find the text output of `v4l2-ctl` more digestable.
 * ISO sensitivity
 * JPEG compression controls
 
-But the layout is messed - you have to mentally see every Reset button as marking the end of a row. Once you realize this you can scan down the named settings and spot things such as vertical flip that you may have missed trying to read through the text output of `v4l2-ctl`.
+But the layout is messed up - you have to mentally see every Reset button as marking the end of a row. Once you realize this you can scan down the named settings and spot things such as vertical flip that you may have missed trying to read through the text output of `v4l2-ctl`.
 
 References
 ----------
