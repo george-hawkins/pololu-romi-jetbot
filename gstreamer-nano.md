@@ -8,6 +8,13 @@ Getting started with using GStreamer with the Raspberry Pi camera module V2 with
     $ sudo apt install v4l-utils
     $ v4l2-ctl --list-formats-ext
 
+Nvidia has optimized versions of various GStreamer elements - use them in preference to the equivalent standard elements:
+
+    $ gst-inspect-1.0 | egrep '^nv'
+    $ gst-inspect-1.0 | egrep '^omx'
+
+E.g. use `omxh264enc` rather than `x264enc`.
+
 Basic H.264 steaming
 --------------------
 
@@ -109,6 +116,6 @@ These cover many more tools than just GStreamer. Are they essentially identical?
 
 ---
 
-nVidia [multimedia user guide](https://developer.download.nvidia.com/embedded/L4T/r24_Release_v2.0/Docs/L4T_Tegra_X1_Multimedia_User_Guide_Release_24.2.pdf) - how you find the latest version I don't know, googling throws up various versions but no obvious page that links to the _latest_ version.
+Nvidia [multimedia user guide](https://developer.download.nvidia.com/embedded/L4T/r24_Release_v2.0/Docs/L4T_Tegra_X1_Multimedia_User_Guide_Release_24.2.pdf) - how you find the latest version I don't know, googling throws up various versions but no obvious page that links to the _latest_ version.
 
 Maybe you can get there somehow via the [JetPack sub-site](https://developer.nvidia.com/embedded/jetpack), e.g. via a direct link Google isn't picking up or indirectly via a link in a PDF available there. Or via the the [developer zone](https://developer.nvidia.com/embedded-computing).

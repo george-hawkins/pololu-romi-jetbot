@@ -80,7 +80,7 @@ These go away once you've added a camera.
 
 The system doesn't seem particularly responsive but installing and running `htop` doesn't show anything unexpected.
 
-The screen handling seems surprisingly poor given that the system is using nVidia's proprietary drivers and given that nVidia definitely knows how to do HDMI in products like the nVidia shield.
+The screen handling seems surprisingly poor given that the system is using Nvidia's proprietary drivers and given that Nvidia definitely knows how to do HDMI in products like the Nvidia shield.
 
 I had to turn off overscan on my TV otherwise the edges of the desktop were offscrean. Overscan seems to be the default on some older TVs but really it should never be on - see this [thread](https://devtalk.nvidia.com/default/topic/1027349/jetson-tx2/display-does-not-fit-properly/). On my Samsung TV disabling overscan involves setting it the picture to "screen fit" - select Menu on the remote control, then select Picture, go down and select Screen Adjustment, then Picture Size and change it to Screen Fit.
 
@@ -127,7 +127,7 @@ Vino is installed - you can find it under `/usr/lib/vino` and you can see what k
 
 The issue is covered in Ubuntu [bug 1741027](https://bugs.launchpad.net/ubuntu/+source/unity-control-center/+bug/1741027/) - they claim to have fixed this in November 2018 but it still seems to be present here.
 
-This post nVidia [forum post](https://devtalk.nvidia.com/default/topic/1042018/jetson-agx-xavier/setting-up-vnc-server-solved-/) points to the only solution I got to work:
+This post Nvidia [forum post](https://devtalk.nvidia.com/default/topic/1042018/jetson-agx-xavier/setting-up-vnc-server-solved-/) points to the only solution I got to work:
 
     $ sudo vim /usr/share/glib-2.0/schemas/org.gnome.Vino.gschema.xml
 

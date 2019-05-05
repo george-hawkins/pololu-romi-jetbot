@@ -22,7 +22,7 @@ From the photos in the various tutorials all you see is "8265NGW".
 
 Mouser sells the standard [8265.NGWMG](https://www.mouser.ch/ProductDetail/Intel/8265NGWMG?qs=sGAEpiMZZMsRr7brxAGoXSSUPDSAjAiVSJQY2dz2OC6rAL38Dke%252Beg%3D%3D) (and also the various variants).
 
-See the nVidia [forum thread](https://devtalk.nvidia.com/default/topic/1049303/jetson-nano/jetson-nano-wifi-/) on diagnosing Jetson Nano WiFi issues.
+See the Nvidia [forum thread](https://devtalk.nvidia.com/default/topic/1049303/jetson-nano/jetson-nano-wifi-/) on diagnosing Jetson Nano WiFi issues.
 
 ---
 
@@ -32,7 +32,7 @@ Jetson Nano Developer Kit - <https://developer.nvidia.com/embedded/buy/jetson-na
 
 The original BOM suggests a Leopard Imaging camera (with 145&deg; [FoV](https://en.wikipedia.org/wiki/Field_of_view)) or a standard Raspberry Pi camera with 160&deg; attachment. The BOM links to Amazon and eBay for resellers of such an attachment - but in all cases the original manufacturer seems to be Waveshare. Waveshare seems a very common source for these cameras ([ModMyPi](https://www.modmypi.com/), the [Pi-Shop](https://www.pi-shop.ch) and many others carry them).
 
-Waveshare sell all-in-one wide-angle units, i.e. attachment and camera PCB. However in the case of Waveshare (and most other similar units) the sensor is the older Omnivision 5MP OV5647, that was used in the V1 Raspberry Pi camera, and has been discontinued by its manufacturer. The Jestson Nano only supports the newer Sony 8MP IMX219 sensor used in the V2 Raspberry Pi camera and cameras like the one from Leopard Imaging. See this nVidia [forum post](https://devtalk.nvidia.com/default/topic/1049605/jetson-nano/-raspberry-pi-version-1-camera-does-not-work/) and this GitHub [issue](https://github.com/NVIDIA-AI-IOT/jetbot/issues/29) for more details and pointers to supported cameras. The Leopard Imaging camera and the standard Raspberry Pi camera with attachment are the only fairly cheap options, the other supported cameras are all noticeably more expensive.
+Waveshare sell all-in-one wide-angle units, i.e. attachment and camera PCB. However in the case of Waveshare (and most other similar units) the sensor is the older Omnivision 5MP OV5647, that was used in the V1 Raspberry Pi camera, and has been discontinued by its manufacturer. The Jestson Nano only supports the newer Sony 8MP IMX219 sensor used in the V2 Raspberry Pi camera and cameras like the one from Leopard Imaging. See this Nvidia [forum post](https://devtalk.nvidia.com/default/topic/1049605/jetson-nano/-raspberry-pi-version-1-camera-does-not-work/) and this GitHub [issue](https://github.com/NVIDIA-AI-IOT/jetbot/issues/29) for more details and pointers to supported cameras. The Leopard Imaging camera and the standard Raspberry Pi camera with attachment are the only fairly cheap options, the other supported cameras are all noticeably more expensive.
 
 Note: the Raspberry Pi camera is fixed focus but it can be adjusted with a pliers - an easier alternative is the Adafruit [lens adjustment tool](https://www.adafruit.com/product/3518).
 
