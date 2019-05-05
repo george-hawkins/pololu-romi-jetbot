@@ -13,7 +13,7 @@ The Raspberry Pi advertises its IP address on your local network using [Avahi](h
 Setting up the camera
 ---------------------
 
-First connect the camera as shown in [`pi-camera-notes.md`](pi-camera-notes.md) then power up the Pi, ssh in and run:
+First connect the camera as shown in [`pi-connecting-camera.md`](pi-connecting-camera.md) then power up the Pi, ssh in and run:
 
     $ sudo raspi-config
 
