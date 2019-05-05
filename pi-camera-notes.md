@@ -10,31 +10,25 @@ So `${SSH_CLIENT%% *}` just strips away everything except the IP address.
 
 The Raspberry Pi advertises its IP address on your local network using [Avahi](https://en.wikipedia.org/wiki/Avahi_(software)) - so you can generally connect to it using the name `raspberrypi.local` rather than a raw IP address like 192.168.0.66. However you _may_ need to use the actual IP address of your Pi. There are no end of ways of determining this, e.g. see this [SO answer](https://stackoverflow.com/questions/13322485/how-to-get-the-primary-ip-address-of-the-local-machine-on-linux-and-os-x).
 
-Connecting the camera module
-----------------------------
+Setting up the camera
+---------------------
 
-Pull up the top of the connector and push it backwards (it can only be pushed one direction - lets call that back).
-
-Insert the cable so that the shiny metal connectors at its end are facing forward and the other side of the cable is the side facing the top of the connector that you just pulled up and back.
-
-Now push the top of the connector back into place, boot the Pi and run:
+First connect the camera as shown in [`pi-camera-notes.md`](pi-camera-notes.md) then power up the Pi, ssh in and run:
 
     $ sudo raspi-config
 
-Select Interfacing Options, then select the Camera and go thru the obvious steps to enable it.
+Select Interfacing Options, then select the Camera and go thru the remaining obvious steps to enable it.
 
 Various pages note that when using the camera the `gpu_mem` must be at least 32M with 128M recommended - if you look in `/boot/config.txt` you see that 128M is the pre-configured default. Maybe at one stage the default for `gpu_mem` was lower (otherwise it hardly seems worth mentioning). TODO: check if `gpu_mem` is maybe updated to 128M from a lower value when setting up the camera with `raspi-config`.
 
-Camera modes and FoV
---------------------
+Camera modes
+------------
 
-For all the examples here I've used a [Waveshare fisheye camera](https://www.waveshare.com/rpi-camera-g.htm) that uses the older OV5647 sensor of the Raspberry Pi camera module V1.
-
-So the modes used below correspond to those listed for the OV5647 in Raspberry Pi [documentation](https://www.raspberrypi.org/documentation/raspbian/applications/camera.md).
+For all the examples here I've used a [Raspberry Pi camera module V2](https://www.raspberrypi.org/products/camera-module-v2/). It uses a IMX219 sensor. The sensor has various modes and you can see these for the IMX219 in the Raspberry Pi [camera documentation](https://www.raspberrypi.org/documentation/raspbian/applications/camera.md).
 
 **Update:** the Picamera (python library) documentation has a much better [overview](https://picamera.readthedocs.io/en/release-1.12/fov.html) of the modes with pictures showing the FoV of the older OV5647 sensor and the newer IMX219 sensor.
 
-For the V2 camera module just replace `-md 6 -w 640 -h 480`, wherever you see it, with `-md 5 -w 1640 -h 922` (this is the V2 mode with the best FoV that can still be handled by the hardware H.264 encoder).
+In all the examples I've used mode 5 as this is the IMX219 mode with the best FoV that can still be handled by the hardware H.264 encoder.
 
 Streaming using raspivid
 ------------------------
@@ -43,23 +37,24 @@ I started out using V4L (see the later sections covering its usage) with VLC but
 
 Let's start straight in on setting up `raspivid` to stream on the Pi:
 
-    $ raspivid -v -n -t 0 -md 6 -w 640 -h 480 -fps 42 -fli auto -vf -l -o tcp://0.0.0.0:9090
+    $ raspivid -v -n -t 0 -md 5 -w 1640 -h 922 -fps 20 -fli auto -vf -l -o tcp://0.0.0.0:9090
 
 Options:
 
 * `-v` - verbose.
 * `-n` - disable preview window.
 * `-t 0` - start capturing immediately.
-* `-md 6 -w 640 -h 480` - mode 6 with width and height set to match the sensor mode.
-* `-fps 42` - frames-per-second matching the lower range of mode 6.
+* `-md 5 -w 1640 -h 922` - mode 5 with width and height set to match the sensor mode.
+* `-fps 20` - frames-per-second matching the mid range of mode 6.
 * `-vf` - vertical flip (if you appear upside-down).
 * `-fli auto` - avoid flicker.
 * `-l -o tcp://0.0.0.0:9090` - listen for TCP connections on port 9090.
 
-See the Picamera [hardware page](https://picamera.readthedocs.io/en/release-1.12/fov.html) for the list of modes and diagrams of what this means it terms of FoV (which the otherwise comprehensive Raspberry Pi [camera documentation](https://www.raspberrypi.org/documentation/raspbian/applications/camera.md) doesn't have). The width and height here correspond to mode 6 on the V1 camera, on the newer V2 camera the corresponding mode would be `-md 7 -w 640 -h 480`.
+See the Picamera [hardware page](https://picamera.readthedocs.io/en/release-1.12/fov.html) for the list of modes and diagrams of what this means it terms of FoV (which the otherwise comprehensive Raspberry Pi [camera documentation](https://www.raspberrypi.org/documentation/raspbian/applications/camera.md) doesn't have). The width and height here correspond to mode 5 on the V2 camera module.
 
 On the local machine:
 
+    $ sudo apt install mplayer
     $ mplayer -nolirc -fps 200 -demuxer h264es ffmpeg://tcp://raspberrypi.local:9090
 
 Usually I use VLC but it introduces a significant lag. To see this restart the Pi side and instead of `mplayer` use:
@@ -70,7 +65,7 @@ Presumably the lag can be tuned with the appropriate command line arguments?
 
 An FPS of 200 sounds extreme but it doesn't seem to mean what is seems. Leaving it at a far higher value than the FPS than the Pi is producing is fine but lower it too far and lag suddenly appears, so one might as well set it higher than the highest possible Pi FPS.
 
-TODO: I'd like to know what's going on here - it I set both sides to 30 FPS I get serious lag, if I set them both to 42 (with mode 6) then all seems fine but I don't gain anything in quality or reduced CPU usage by setting MPlayer's FPS lower - so it seems sticking with 200 is simplest.
+TODO: I'd like to know what's going on here - if I set the MPlayer FPS below a certain seemingly arbitrary value then I start to get serious lag, if I set it to just above this value then all seems fine but I don't gain anything in quality or reduced CPU usage - so it seems simplest to stick with 200.
 
 Oddly no matter what the setting lag seems to appear and disappear over time even if there's no lag initially.
 
@@ -93,11 +88,18 @@ Very few examples I've found of `raspivid` usage use the flicker avoidance flag 
 Binning
 -------
 
-The camera sensor supports a number of modes with various resolutions and frame rates. In these examples I use a very low resolution - 640x480 - but if you look at the Picamera [hardware page](https://picamera.readthedocs.io/en/release-1.12/fov.html) you'll notice that the 640x480 sensor mode involves binning (4x4 binning with the V1 sensor and 2x2 binning with the V2 sensor).
+The camera sensor supports a number of modes with various resolutions and frame rates. If you look at the Picamera [hardware page](https://picamera.readthedocs.io/en/release-1.12/fov.html) you'll see that some of these modes involve something called binning.
 
-[Binning](https://www.ubergizmo.com/what-is/pixel-binning-camera/) that multiple sensor pixels are combined to form one super pixel to reduce noise. This can be useful in low light situations (but whether it outways the loss in resolution depends on the situation).
+[Binning](https://www.ubergizmo.com/what-is/pixel-binning-camera/) means that multiple sensor pixels are combined to form one super pixel to reduce noise. This can be useful in low light situations (but whether it outways the loss in resolution depends on the situation).
 
-Anyway 640x480 was chosen for these examples not because it's better than other modes, you should chose the mode based on what you want. I was working in a relatively low-light setting and also it was convenient to work with a small video window when experimenting with various settings etc. And importantly 640x480 is one of the modes that uses the full sensor.
+Binning used to be more import with the V1 camera module that used the older OV5647 sensor, as it supported up to 4x4 binning. The newer IMX219 sensor of the V2 module only supports up to 2x2 binning.
+
+Older OV5647 sensor
+-------------------
+
+As noted the V1 camera module uses the older OV5647 sensor and many modules from third parties continue to use this sensor, e.g. the popular range of Waveshare modules (I've got a [Waveshare fisheye camera](https://www.waveshare.com/rpi-camera-g.htm)).
+
+For cameras using the OV5647 sensor I suggest using `-md 6 -w 640 -h 480 -fps 42` for these examples rather than the `-md 5 -w 1640 -h 922 -fps 20` seen here. Mode 6 uses the full sensor and applies 4x4 binning which works well in low-light settings. 42 FPS is the lower end of the FPS range for this mode.
 
 Hardware limitations
 --------------------
@@ -123,11 +125,11 @@ First on your local machine start netcat so it will listen for a connection from
 
 Then on the Pi start `raspivid` and pipe its output to netcat such that it forwards it to your local machine:
 
-    $ raspivid -v -n -t 0 -md 6 -w 640 -h 480 -fps 42 -fli auto -vf -o - | nc ${SSH_CLIENT%% *} 9090
+    $ raspivid -v -n -t 0 -md 5 -w 1640 -h 922 -fps 20 -fli auto -vf -o - | nc ${SSH_CLIENT%% *} 9090
 
 In the above setup it's the MPlayer side that waits (and must be started first). You can switch it around and start the Pi side first such that it waits for a connection from the local machine:
 
-    $ raspivid -v -n -t 0 -md 6 -w 640 -h 480 -fps 42 -fli auto -vf -l -o - | nc -l 9090
+    $ raspivid -v -n -t 0 -md 5 -w 1640 -h 922 -fps 20 -fli auto -vf -l -o - | nc -l 9090
 
 And then start MPlayer on your local machine:
 
@@ -137,7 +139,7 @@ Important: notice the additional `-l` flag passed to `raspivid`. In the first se
 
 The nice thing with this setup though is that you can tell netcat on the Pi side not to exit when MPlayer is closed or otherwise stops consuming data. With `-k` you can tell it to listen for another connection once the current one dies:
 
-    $ raspivid -v -n -t 0 -md 6 -w 640 -h 480 -fps 42 -fli auto -vf -l -o - | nc -k -l 9090
+    $ raspivid -v -n -t 0 -md 5 -w 1640 -h 922 -fps 20 -fli auto -vf -l -o - | nc -k -l 9090
 
 GStreamer
 ---------
@@ -148,7 +150,7 @@ Install GStreamer on the Pi as per the GStreamer [installation guide](https://gs
 
 Then on the Pi to stream data via `gst-launch-1.0`:
 
-    $ raspivid -v -n -t 0 -md 6 -w 640 -h 480 -fps 42 -fli auto -vf -o - | gst-launch-1.0 fdsrc !  h264parse ! rtph264pay config-interval=1 pt=96 ! udpsink host=${SSH_CLIENT%% *} port=9090
+    $ raspivid -v -n -t 0 -md 5 -w 1640 -h 922 -fps 20 -fli auto -vf -o - | gst-launch-1.0 fdsrc !  h264parse ! rtph264pay config-interval=1 pt=96 ! udpsink host=${SSH_CLIENT%% *} port=9090
 
 On the local machine:
 
@@ -161,7 +163,7 @@ This example uses UDP which has two nice properties:
 
 You can avoid the complex `caps` specification by using the GStreamer elements `gdppay` and `gdpdepay` but this requires a TCP connection (with the Pi side started first. On the Pi:
 
-    $ raspivid -v -n -t 0 -md 6 -w 640 -h 480 -fps 42 -fli auto -vf -o - | gst-launch-1.0 fdsrc !  h264parse ! rtph264pay config-interval=1 pt=96 ! gdppay ! tcpserversink host=0.0.0.0 port=9090
+    $ raspivid -v -n -t 0 -md 5 -w 1640 -h 922 -fps 20 -fli auto -vf -o - | gst-launch-1.0 fdsrc !  h264parse ! rtph264pay config-interval=1 pt=96 ! gdppay ! tcpserversink host=0.0.0.0 port=9090
 
 On the local machine:
 
@@ -184,7 +186,7 @@ First on the local machine:
 
 Then on the Pi:
 
-    $ raspivid -v -n -t 0 -md 6 -w 640 -h 480 -fps 42 -fli auto -vf -o udp://${SSH_CLIENT%% *}:9090
+    $ raspivid -v -n -t 0 -md 5 -w 1640 -h 922 -fps 20 -fli auto -vf -o udp://${SSH_CLIENT%% *}:9090
 
 The lower half of the image appears to be melting but there is no significant lag. Now with VLC on the local machine:
 
@@ -210,7 +212,7 @@ V4L is certainly not as bulletproof as `raspivid` and sometimes you may need to 
 Now let's jump straight into streaming video from the Pi with GStreamer:
 
     $ v4l2-ctl --vertical_flip=1
-    $ gst-launch-1.0 v4l2src ! 'video/x-h264, width=640, height=480, framerate=42/1' ! h264parse ! rtph264pay config-interval=1 pt=96 ! gdppay ! tcpserversink host=0.0.0.0 port=9090
+    $ gst-launch-1.0 v4l2src ! 'video/x-h264, width=1640, height=922, framerate=42/1' ! h264parse ! rtph264pay config-interval=1 pt=96 ! gdppay ! tcpserversink host=0.0.0.0 port=9090
 
 Then on your local machine:
 
@@ -224,7 +226,7 @@ Setting the video format with v4l2-ctl
 Above it's GStreamer that sets the width, height etc. Just as it's possible to set the camera's vertical flip settings it's also possible to set these other values via `v4l2-ctl`:
 
     $ v4l2-ctl --set-parm=42
-    $ v4l2-ctl --set-fmt-video=width=640,height=480,pixelformat=H264
+    $ v4l2-ctl --set-fmt-video=width=1640,height=922,pixelformat=H264
 
 `parm` means FPS in V4L's rather strange vernacular. The `pixelformat` value needs to be one of the values displayed by:
 
