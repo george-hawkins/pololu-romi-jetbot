@@ -76,7 +76,7 @@ If you look at the `syslog` you'll see lots of errors referring to `nvrm`:
 
     $ fgrep nvrm /var/log/syslog
 
-Apparently these go away once you've added a camera.
+These go away once you've added a camera.
 
 The system doesn't seem particularly responsive but installing and running `htop` doesn't show anything unexpected.
 

@@ -5,6 +5,27 @@ Getting started with using GStreamer with the Raspberry Pi camera module V2 with
 
 ---
 
+    $ sudo apt install v4l-utils
+    $ v4l2-ctl --list-formats-ext
+
+Basic H.264 steaming
+--------------------
+
+On the Nano:
+
+    $ gst-launch-1.0 nvarguscamerasrc ! 'video/x-raw(memory:NVMM), width=1920, height=1080, framerate=30/1' ! nvvidconv ! omxh264enc ! h264parse ! rtph264pay config-interval=1 pt=96 ! gdppay ! tcpserversink host=0.0.0.0 port=9090
+
+On your local machine:
+
+    $ gst-launch-1.0 -v tcpclientsrc host=jetsonnano.local port=9090 ! gdpdepay ! rtph264depay ! avdec_h264 ! videoconvert ! autovideosink sync=false
+
+Most useful page so far - the RidgeRun page of using [GStreamer with the Jetson TX1](https://developer.ridgerun.com/wiki/index.php?title=Gstreamer_pipelines_for_Jetson_TX1).
+
+
+There's a near identical [page](https://developer.ridgerun.com/wiki/index.php?title=Gstreamer_pipelines_for_Jetson_TX2) for the TX2. The two have diverged slightly - the TX1 page seems to have more reference links - the only section that the TX2 page has that the TX1 doesn't is the short piece on using VLC in the [H264 UDP streaming section](https://developer.ridgerun.com/wiki/index.php?title=Gstreamer_pipelines_for_Jetson_TX2#H264_UDP_Streaming).
+
+---
+
 Intro the GStreamer and Jetson by Peter Moran - <http://petermoran.org/csi-cameras-on-tx2/>
 
 ---
