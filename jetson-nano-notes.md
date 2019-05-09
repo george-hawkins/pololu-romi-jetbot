@@ -5,7 +5,25 @@ On the first boot the Nano _appeared_ to hang while displaying a dialog that say
 
 But I left it for about 30 minutes and it did eventually move on from this point. Others have experienced this (see this [thread](https://devtalk.nvidia.com/default/topic/1049751/jetson-nano/hangs-at-first-boot-at-quot-waiting-for-unattended-upgr-to-exit-quot-/)) but the solution seems to be simply to wait.
 
-Despite this apparent unattended upgrade process as part of starting up the system still seemed quite stale - doing the following upgraded a substantial number of packages:
+Sudo
+----
+
+First turn off requiring a password for sudo:
+
+    $ sudo visudo
+
+And then add `NOPASSWD:` to this line:
+
+    %sudo   ALL=(ALL:ALL) ALL
+
+So ends up being:
+
+    %sudo   ALL=(ALL:ALL) NOPASSWD: ALL
+
+Upgrade all
+-----------
+
+Despite the unattended upgrade process as part of starting up, the system still seemed quite stale - doing the following upgraded a substantial number of packages:
 
     $ sudo apt update
     $ sudo apt full-upgrade
@@ -27,15 +45,13 @@ The issue seems to be that they're soft links:
     $ ls -l aarch64-linux-gnu_GL.conf
     /etc/alternatives/aarch64-linux-gnu_gl_conf
 
-And for whatever reason it seems `update-initramfs` so just replace the soft links with the real files with the same contents:
+For whatever reason it seems `update-initramfs` has problems these so just replace the soft links with real files with the same contents:
 
-    $ FILE=$(readlink -f aarch64-linux-gnu_GL.conf)
-    $ sudo rm aarch64-linux-gnu_GL.conf
-    $ sudo cp $FILE aarch64-linux-gnu_GL.conf
+    $ sudo cp aarch64-linux-gnu_GL.conf tmp
+    $ sudo mv tmp aarch64-linux-gnu_GL.conf
 
-    $ FILE=$(readlink -f aarch64-linux-gnu_EGL.conf)
-    $ sudo rm aarch64-linux-gnu_EGL.conf
-    $ sudo cp $FILE aarch64-linux-gnu_EGL.conf
+    $ sudo cp aarch64-linux-gnu_EGL.conf tmp
+    $ sudo mv tmp aarch64-linux-gnu_EGL.conf
 
 Now `update-initramfs` will no longer complain about this when run:
 
@@ -82,7 +98,10 @@ The system doesn't seem particularly responsive but installing and running `htop
 
 The screen handling seems surprisingly poor given that the system is using Nvidia's proprietary drivers and given that Nvidia definitely knows how to do HDMI in products like the Nvidia shield.
 
-I had to turn off overscan on my TV otherwise the edges of the desktop were offscrean. Overscan seems to be the default on some older TVs but really it should never be on - see this [thread](https://devtalk.nvidia.com/default/topic/1027349/jetson-tx2/display-does-not-fit-properly/). On my Samsung TV disabling overscan involves setting it the picture to "screen fit" - select Menu on the remote control, then select Picture, go down and select Screen Adjustment, then Picture Size and change it to Screen Fit.
+Overscan
+--------
+
+I had to turn off overscan on my TV otherwise the edges of the desktop were offscrean. Overscan seems to be the default on some older TVs but really it should never be on - see this [thread](https://devtalk.nvidia.com/default/topic/1027349/jetson-tx2/display-does-not-fit-properly/). On my Samsung TV disabling overscan involves setting the picture to "screen fit" - select Menu on the remote control, then select Picture, go down and select Screen Adjustment, then Picture Size and change it to Screen Fit.
 
 WiFi
 ----
@@ -338,6 +357,6 @@ Both the Gnome and LXDE, when running within TigerVNC, complained that "System p
 To change this:
 
     $ sudo cp /var/lib/polkit-1/localauthority/10-vendor.d/org.freedesktop.NetworkManager.pkla /var/lib/polkit-1/localauthority/50-local.d
-    $ sudo /var/lib/polkit-1/localauthority/50-local.d/org.freedesktop.NetworkManager.pkla
+    $ sudo vim /var/lib/polkit-1/localauthority/50-local.d/org.freedesktop.NetworkManager.pkla
 
 And change `org.freedesktop.NetworkManager.settings.modify.system` to `org.freedesktop.NetworkManager.network-control`. Note: the original `org.freedesktop.NetworkManager.pkla`, that's copied, is just being used as a template for enabling what we need, i.e. `network-control`. See this [blog entry](https://lauri.xn--vsandi-pxa.com/cfgmgmt/polkit.html) on Polkit for more details.
