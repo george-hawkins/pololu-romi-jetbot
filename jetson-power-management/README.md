@@ -5,7 +5,7 @@ The 8 pin J40 header block exposes some of the power management related signals.
 
 The interesting pins here are pins 7 and 8 (the `LATCH_SET_BTN` pins), which are connected by a yellow jumper cable in the pictures below, and pins 1 and 2 (the `BUTTON_PWR_ON` pins), which are connected by a white jumper cable.
 
-Normally when you connect the USB power cable the board boots-up straigh away. Connecting pins 7 and 8 disables this behavior and instead lets us use pins 1 and 2 to initiate booting.
+Normally when you connect the USB power cable the board boots-up straight away. Connecting pins 7 and 8 disables this behavior and instead lets us use pins 1 and 2 to initiate booting.
 
 ![01](no-power-white-in.jpg)
 
@@ -19,7 +19,7 @@ Then connect the USB power cable - nothing happens - unlike before the system do
 
 ![01](power-white-out.jpg)
 
-Now connect pins 1 and 2 momentarily, i.e. plug in the jumper cable as shown and immediately disconnect it again. In a more permanent setup you'd connect these two pins with a [momentary button switch](https://www.adafruit.com/product/367) (as shown later).
+Now connect pins 1 and 2 momentarily, i.e. plug in the jumper cable as shown and immediately disconnect it again. In a more permanent setup, you'd connect these two pins with a [momentary button switch](https://www.adafruit.com/product/367) (as shown later).
 
 ![01](power-white-in.jpg)
 
@@ -42,12 +42,12 @@ Shutdown only behavior
 
 So do pins 1 and 2 do anything if you don't have pins 7 and 8 connected together all the time as above?
 
-Yes - when pins 7 and 8 are not connected pins 1 and 2 will do nothing when the system is in a powered off state but when the system is up and running momentarily connecting them will still trigger an orderly shutown of the system.
+Yes - when pins 7 and 8 are not connected pins 1 and 2 will do nothing when the system is in a powered off state but when the system is up and running momentarily connecting them will still trigger an orderly shutdown of the system.
 
 Breadboard layout
 -----------------
 
-To avoid accidentally connecting the wrong pins together (with potentially very serious consequences) a longer term solution is to wire pins 1 and 2 together via a push button like so:
+To avoid accidentally connecting the wrong pins together (with potentially very serious consequences) a longer-term solution is to wire pins 1 and 2 together via a push button like so:
 
 ![01](power-push-button.jpg)
 
