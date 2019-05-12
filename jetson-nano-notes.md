@@ -360,3 +360,13 @@ To change this:
     $ sudo vim /var/lib/polkit-1/localauthority/50-local.d/org.freedesktop.NetworkManager.pkla
 
 And change `org.freedesktop.NetworkManager.settings.modify.system` to `org.freedesktop.NetworkManager.network-control`. Note: the original `org.freedesktop.NetworkManager.pkla`, that's copied, is just being used as a template for enabling what we need, i.e. `network-control`. See this [blog entry](https://lauri.xn--vsandi-pxa.com/cfgmgmt/polkit.html) on Polkit for more details.
+
+Minimal Ubuntu
+--------------
+
+On logging into the Nano it tells you:
+
+    This system has been minimized by removing packages and content that are
+    not required on a system that users do not log into.
+
+For more details on this see minimal Ubuntu [wiki page](https://wiki.ubuntu.com/Minimal).
