@@ -578,6 +578,8 @@ You can disable all the debug related stuff by commenting out the line `app.debu
 
 Now to access the web application being run by `server.py` open <http://raspberrypi.local:5000> in your browser. It's laid out to work well on a smartphone but works well on anything.
 
+Note: my Android phone doesn't seem to use [mDNS](https://en.wikipedia.org/wiki/Multicast_DNS) so I had to use an IP address rather than the name `raspberrypi.local`.
+
 Click on the LED checkboxes, press Play, then, for the exciting bit, drag your finger around on the grey motor area (or click and drag your mouse cursor).
 
 I managed a couple of times to get things to a point where it beeped, the motors stopped and there was no way to get them going again without restarting `server.py`.
