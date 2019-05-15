@@ -478,3 +478,132 @@ The `clock-frequency` value is 0x186a0, i.e. 100,000 in decimal. For some of the
 **Note:** there are various `.dtb` files in `/boot` - I just chose `tegra210-p3448-0000-p3449-0000-a02.dtb` as it was the newest but I don't know which one is appropriate.
 
 TODO: so why is `i2c1` - the bus we see via the GPIO header - run at 100,000 and how do we change this?
+
+Assembly
+--------
+
+1. Attach low-profile headers and buzzer.
+
+There are two options for mounting the low-profile female headers for connecting the encoders - an inner and an outer row of holes on either side.
+
+It doesn't make a big difference which you choose - it just affects whether you solder the corresponding male headers to the outer or inner side of the encoders themselves.
+
+The Pololu blog suggests using the inner row on the basis that it makes connecting a HDMI connector to a Pi, that's mounted on top of the control board, easier to connect.
+
+So we'll do this as there's no obvious better reason to favor inner over outer. However as we're not using a Pi it's not actually relevant - and anyway to get at the Pi HDMI connector while it's mounted would mean detaching the motor connectors first, so if I have to detach something why not the Pi itself (so making all its connectors easily accessible).
+
+Taping the components to the board before soldering was a good suggestion from the blog. I still managed (twice) to end up with header not quite perpendicular.
+
+Obvious tip: start with the first and last pin and apply the soldering iron tip to each pin such that it doesn't push the header above out of the perpendicular.
+
+I.e. don't push from the side like this:
+
+          +-+-+-+-+-+ Bad
+          ^
+          |
+          |
+
+Instead apply the iron in this direction:
+
+    ----> +-+-+-+-+-+ Good
+
+2. Insert battery connectors
+
+The chassis comes with a full set of connectors (while the control board comes with just the connectors that end up soldered to it - we won't need these spare connectors).
+
+3. Screw on the control board - this is moderately fiddly but once the first bolt is in place the rest are easy - nicely they provided one space nut and bolt in case one slips off into the distance.
+
+4. Solder the four battery tabs to the control board - I hate these larger items that dissipate a lot of heat - make sure you have at a soldering iron with 65W or more and switch up to a larger tip.
+
+Note: you forgot the second pair initially so the photos are out of order with point 5.
+
+5. Solder the encoders to the motors - silkscreened side facing outwards. The motor connectors are flexible so the encoders move a little even when soldered down.
+
+6. Snap in the motor bracks from below.
+
+Aside: at this late stage I found I'd spent so much time working on the encoder headers, trying to get them perfectly perpendicular, that solder had flowed in and filled up the bases of the female pins. This made the header useless.
+
+Removing the board was fairly easy. Then I used a solder sucker to get rid of as much solder as possible from the pins. It proved impossible to remove enough that it was possible to waggle the header off.
+
+Instead I broke up the plastic of the header with my [flush cutters](https://www.adafruit.com/product/152) - it broke up very easily - and then wiggled each of the pins individually.
+
+At first I tried pulling the pins out with a pliers while applying heat of the otherside with the soldering iron, but the pliers just sucked away all the heat.
+
+Using my fingernails instead proved much better (and wasn't sore - clear nails are very poor conductors of heat).
+
+Luckily both the control board and the encoders both came with a pair of low-profile headers - so I had two spares. Soldering on the replacement header proved easy - which just shows you just need a little practise before you're back in the flow.
+
+Mounting the board back on was harder than getting it off - I tried pushing down the springs on the battery connectors with various things, but in the end sliding in my little finger did it fairly easily.
+
+7. Slide in the motors - before they're all the way in pop on the right angle male headers and then slide the motors all the way in, with the male header of the encoders fully inserted into the female headers of the control board.
+
+8. Solder the male headers onto the encoders - doing this in-place is the only way to ensure everything lines up - and as it turns out it's not to tricky, nothing hinders your access with the soldering iron.
+
+9. Now push on the encoder disks. **Important:** don't push the encoder disks all the way on, so they end up flush against the encoder itself, they should be pushed onto the shaft but not enough that the shart protrudes out the other side (see the photos).
+
+That's all the soldering finished.
+
+10. Now install the ball caster in the rear socket (the one that's firmly part of the chassis, as opposed to the front one which is supported by a flexible arm).
+
+11. Put the tires on the wheels and attach the wheels to the motor shafts.
+
+12. Load the battery compartment.
+
+13. Attach it to a Pi.
+
+14. Press the power button - if all goes well the blue power LED goes on, the buzzer beeps (this presumably depends on the current sketch?) and the Pi powers up.
+
+Testing
+-------
+
+Now to try it out...
+
+    $ ssh pi@raspberrypi.local
+    $ cd pololu-rpi-slave-arduino-library/pi
+    $ python3 ./blink.py 
+
+If the user LEDs blick then all is good - and it's time to try controlling the Romi via the web:
+
+    $ python3 ./server.py    
+     * Running on http://0.0.0.0:5000/ (Press CTRL+C to quit)
+     * Restarting with stat
+     * Debugger is active!
+     * Debugger pin code: 260-223-657
+
+It took several seconds for the first two lines to appear and several more for the debugger related ones.
+
+The debugger lines are from [Werkzeug](https://werkzeug.palletsprojects.com/), one of the dependencies of [Flask](http://flask.pocoo.org/) - it's Flask that provides the web server capabilities of `server.py`. You can't actually use the PIN for anything unless something goes wrong in the Python code and you get e.g. a [500 error](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500) in your browser - with debug enabled you'll see a nice stack trace and the option to open an interactive debug console (see [here](https://werkzeug.palletsprojects.com/en/0.15.x/debug/) for more details). Unfortunately none of this is available if the errors are swallowed by AJAX (as happens with `server.py`).
+
+You can disable all the debug related stuff by commenting out the line `app.debug = True` in `server.py` (with a `#`).
+
+Now to access the web application being run by `server.py` open <http://raspberrypi.local:5000> in your browser. It's laid out to work well on a smartphone but works well on anything.
+
+Click on the LED checkboxes, press Play, then, for the exciting bit, drag your finger around on the grey motor area (or click and drag your mouse cursor).
+
+I managed a couple of times to get things to a point where it beeped, the motors stopped and there was no way to get them going again without restarting `server.py`.
+
+TODO: next time see if reloading the page does the trick, without restarting `server.py`. What's making the beep - it's not something obviously triggered from `server.py` and it's not something obvious in `RomiRPiSlaveDemo.ino`.
+
+If I restarted `server.py` it turned out to be best to also reload the browser web page - otherwise odd things would happen, e.g. the motors wouldn't return to stopped on release my finger/mouse from the motor area.
+
+It's a bit shocking how simple the code for `server.py` and `RomiRPiSlaveDemo.ino` are, just take a look:
+
+* On the Pi: [`server.py`](https://github.com/pololu/pololu-rpi-slave-arduino-library/blob/master/pi/server.py), [`index.html`](https://github.com/pololu/pololu-rpi-slave-arduino-library/blob/master/pi/templates/index.html), [`main.css`](https://github.com/pololu/pololu-rpi-slave-arduino-library/blob/master/pi/static/main.css) and [`script.js`](https://github.com/pololu/pololu-rpi-slave-arduino-library/blob/master/pi/static/script.js).
+* On the control board: [`RomiRPiSlaveDemo.ino`](https://github.com/pololu/pololu-rpi-slave-arduino-library/blob/master/examples/RomiRPiSlaveDemo/RomiRPiSlaveDemo.ino).
+
+The [`a_star.py`](https://github.com/pololu/pololu-rpi-slave-arduino-library/blob/master/pi/a_star.py) library that `server.py` depends on is also tiny - it just exchanges bytes with the control board via I2C. The corresponding [TWI library](https://github.com/pololu/pololu-rpi-slave-arduino-library/blob/master/src/PololuTWISlave.cpp) on the control board side is also tiny.
+
+Notes:
+
+* Two Wire Interface (TWI) is the same as I2C (which is a registered trademark of Philips).
+* The TWI library includes a [workaround](https://github.com/pololu/pololu-rpi-slave-arduino-library/blob/master/src/PololuRPiSlave.h) for a bug in the Pi processor's I2C implementation. See the related Raspberry Pi [bug](https://github.com/raspberrypi/linux/issues/254) - it's marked as closed as there's a workaround, not because it has been fixed. The same bug seems to exist in a processor that the Pi has used (from the original BCM2835 to the BCM2837B0 of the Pi 3 Model B+).
+
+TODO: if you look in [`RomiRPiSlaveDemo.ino`](https://github.com/pololu/pololu-rpi-slave-arduino-library/blob/master/examples/RomiRPiSlaveDemo/RomiRPiSlaveDemo.ino) you'll see the line:
+
+    PololuRPiSlave<struct Data,5> slave;
+
+The `5` is a delay used to workaround the BCM283* I2C bug. For the Jetson Nano it's probably best to set this value to 0.
+
+OK - enough about the I2C bug - back to the Pi and control board code being so small...
+
+The real work is actually all in the separate [romi-32u4-arduino-library](https://github.com/pololu/romi-32u4-arduino-library) that provides all the classes needed to interface with the motors, encoders, buttons, LEDs and buzzer. And don't forget there's a separate library (that isn't pulled in for this setup) for the LSM9DS0.
