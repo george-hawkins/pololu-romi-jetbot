@@ -609,3 +609,93 @@ The `5` is a delay used to workaround the BCM283* I2C bug. For the Jetson Nano i
 OK - enough about the I2C bug - back to the Pi and control board code being so small...
 
 The real work is actually all in the separate [romi-32u4-arduino-library](https://github.com/pololu/romi-32u4-arduino-library) that provides all the classes needed to interface with the motors, encoders, buttons, LEDs and buzzer. And don't forget there's a separate library (that isn't pulled in for this setup) for the LSM9DS0.
+
+A better IDE
+------------
+
+Download Sloeber, an Eclipse based IDE for Arduino, for [Linux](http://eclipse.baeyens.it/stable.php?OS=Linux), [Mac](http://eclipse.baeyens.it/stable.php?OS=MacOS) or [Windows](http://eclipse.baeyens.it/stable.php?OS=Windows).
+
+Unpack the downloaded bundle and launch the IDE:
+
+    $ tar -xf ~/Downloads/V4.3.1_linux64.2018-10-10_08-21-58.tar.gz
+    $ mv sloeber sloeber-4.3.1
+    $ cd sloeber-4.3.1
+    $ ./sloeber-ide
+
+Wait for it to install various bits and pieces that it needs, then restore the Welcome view (i.e. reduce from maximized).
+
+Go to Windows / Preferences, expand Arduino, select _Third party index url's_, add `https://files.pololu.com/arduino/package_pololu_index.json`, in the main text field below the existing URLs, and click Apply.
+
+Now, just above, go to _Platforms and Boards_, expand pololu-a-star, then expand _Pololu A-Star Boards_, select the latest version (4.0.2 at the time of writing) and click Apply.
+
+Now, just above again, go to _Library Manager_, type romi32u4 into the search field and tick the checkbox beside the displayed library, then search for PololuRPiSlave and do the same.
+
+Finally click _Apply and Close_.
+
+Connect the control board via USB, click the _Create new sketch_ button, then:
+
+* Enter a project name, e.g. romi-jetson-nano.
+* From the platform folder dropdown select the Pololu one, for board select _Pololu A-Star 32U4_, then select the appropriate port, e.g. `/dev/ttyACM0`.
+* From the select code dropdown select _Sample sketch_, below expand Library, then PololuRPiSlave and tick RomiRPiSlaveDemo.
+* Click Finish.
+
+Now you can expand the project in the _Project Explorer_ view, go to `RomiRPiSlaveDemo.ino`, now you can control-click on things in the source like `PololuRPiSlave`.
+
+Make sure to click the _Link with Editor_ button in the _Project Explorer_ view so that this view stays in sync with the currently selected editor tab.
+
+Power mode
+----------
+
+By default there's no constraint on how much power the Nano module can ask for. The module itself can consume up to 2A and this is the maximum that can be provided via the micro-USB power connector.
+
+This can be problematic is the development board also has to power additional hardware such as a camera.
+
+You can switch the module into a lower power mode so that it consumes at most 1A:
+
+    $ sudo nvpmodel -m 1
+
+The values, e.g. 1 here, are defined in `/etc/nvpmodel.conf`, search for `POWER_MODEL` and you'll find (at least) two definitions with `ID` and `NAME` attributes.
+
+You can query the current power mode like so:
+
+    $ sudo nvpmodel -q
+    NV Power Mode: 5W
+    1
+
+And you can set it back to unconstrained power consumption (`MAXN`) like so:
+
+    $ sudo nvpmodel -m 0
+    $ sudo nvpmodel -q
+    NV Power Mode: MAXN
+    0
+
+Nano control continued
+----------------------
+
+Remove the previously installed orignal `pololu-rpi-slave-arduino` library and install my fork:
+
+    $ ssh ghawkins@JetsonNano.local
+    $ rm -r pololu-rpi-slave-arduino-library
+    $ git clone git@github.com:george-hawkins/pololu-rpi-slave-arduino-library.git
+
+Make sure the relevant I2C bus is running at 400kHz:
+
+    $ echo 400000 | sudo tee -a /sys/bus/i2c/devices/i2c-1/bus_clk_rate
+
+Start the server:
+
+    $ cd pololu-rpi-slave-arduino-library/pi
+    $ python3 ./server.py 
+
+In your browser open <http://jetsonnano.local:5000/>
+
+Set I2C bus speed at startup
+----------------------------
+
+    $ ssh ghawkins@JetsonNano.local
+    $ cd git/pololu-romi-jetbot
+    $ sudo cp i2c-1-400kHz.service /etc/systemd/system
+    $ sudo systemctl daemon-reload
+    $ systemctl enable i2c-1-400kHz
+
+See the `i2c-1-400kHz.service` file itself for more details.
