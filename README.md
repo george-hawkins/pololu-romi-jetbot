@@ -217,9 +217,37 @@ I ordered all Adafruit parts from Mouser, except the header - where I just took 
 
 **Update:** when the Pololu order arrived [Die Post](https://www.post.ch/de/geschaeftlich/themen-a-z/preise-empfangen/preise-import/preise-importverzollung) charged an additional Fr. 30.30:
 
-* Vezollung - Fr. 16 + 3% of the package's value (not including the postage cost).
-* MwSt. - 7.7% of the package's value plus Vezollung.
+* Verzollung - Fr. 16 + 3% of the package's value (not including the postage cost).
+* MwSt. - 7.7% of the package's value plus Verzollung.
 
 In both cases the package's value did _not_ include the postage cost. For packages coming from Germany, Austria, France and Italy the fixed fee is Fr. 11.50, rather than Fr. 16, but the rest is the same.
 
-So that's US$30.45 plus Fr. 30.30 of duties on parts that cost just US$116.20.
+So that's postage of US$30.45 plus Fr. 30.30 of fees/duties on parts that cost just US$116.20.
+
+**Update:** at least Die Post honestly and clearly laid out the charges - unlike FedEx which just quoted a sequence of amounts (giving the same amounts diffent names on two different sheets) without even mentioning what they believed to be the CHF value of the thing that had been delivered. Bizarrely the Arrow delivery note that accompanied the package appears to mention no price, while covering everything else - tariff code etc.
+
+So from this [FedEx page](https://www.fedex.com/de-ch/billing/duty-tax.html) and the order confirmation email I can piece together the following:
+
+Deliver item cost: EUR 89.92. However in the documents provided to the [EZV](https://www.ezv.admin.ch/ezv/de/home.html) they say the original item currency was USD (again without stating the amount) and the exchange rate was USD/CHF 1.020909, i.e. $1 buys Fr 1.020909.
+
+So as Arrow say the USD price of the Jestson is $99 that's Fr. 101.07.
+
+They apply a "Bearbeitungsgebühr von 2,5 % der Zölle und Steuern mit einem Mindestbetrag von CHF ". What the "Zolle und Steuern" came to they don't say but clearly it came to less the Fr. 22, so they charged:
+
+* Bearbeitungsgebühr- Fr.22
+* Applied MwSt of 7.7% to the Fr. 22 - Fr. 1.70
+* Tax applied to the actual package at 7.7%: Fr. 9.25
+
+In the documents they filed with the EZV they say the taxable value was Fr. 120 - and 7.7% is Fr. 9.25. But where did the (very round) figure of Fr. 120 come from - it's not the Fr. 101.08 I calculated above given the rate they say they used.
+
+So the Fr. 22 + Fr. 1.70 are entirely related to their fees, and the Fr. 9.25 is the amount I owed the Federal government (on the unexplained amount of Fr. 120).
+
+I've asked FedEx (by email) where the Fr. 120 amount comes from.
+
+The Fr. 120 amount and the exchange rate don't come from the FedEx bill instead the bill includes a [link](https //e-dec-web.ezv.admin.ch/edecZugangscodeGui/) to a page on the EZV where you can download the documentation that FedEx filed with the EZV. You have to enter the Zollanmeldungsnummer and the Zugangscode given in the bill, along with your email address - they then send you a zip file via email which you then have to unpack with 7zip:
+
+    $ 7z x edecReceipts_19CHEI001243104657_2019-05-17_2213.zip
+
+It's a password protected zip file and you have to use the Zugangscode here again as the password.
+
+So the postage was "free" on an item that cost just US$99 but then an additional Fr. 32.95. And it's odd that it's hard to reconsile how FedEx determined the actual MwSt. involved and how Die Post did it.
