@@ -1,0 +1,25 @@
+[Unit]
+Description=Set i2c-1 clock rate to 400kHz
+
+#
+# To install:
+#     # cp i2c-1-400kHz.service /etc/systemd/system
+#     # systemctl daemon-reload
+#
+# To start it:
+#     # systemctl start i2c-1-400kHz
+#
+# To have it automatically start at boot:
+#     # systemctl enable i2c-1-400kHz
+#
+# To see the service's output to stdout/stderr:
+#     # journalctl --unit i2c-1-400kHz
+#
+
+[Service]
+Type=oneshot
+ExecStart=echo 400000
+StandardOutput=file:/sys/bus/i2c/devices/i2c-1/bus_clk_rate
+
+[Install]
+WantedBy=multi-user.target
