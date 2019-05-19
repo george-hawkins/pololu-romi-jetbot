@@ -18,7 +18,7 @@ Description=Set i2c-1 clock rate to 400kHz
 
 [Service]
 Type=oneshot
-ExecStart=echo 400000
+ExecStart=/bin/echo 400000
 StandardOutput=file:/sys/bus/i2c/devices/i2c-1/bus_clk_rate
 
 [Install]
