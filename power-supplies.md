@@ -1,5 +1,5 @@
-Jetson Nano power adapters
-==========================
+Jetson Nano power
+=================
 
 Just 2A can be supplied to the Nano via the USB power connector but the Nano can consume more.
 
@@ -8,6 +8,9 @@ It can cosume 4A via the barrel jack and 6A via two GPIO pins (each pin takes 3A
 See ["Use More Power!"](https://www.jetsonhacks.com/2019/04/10/jetson-nano-use-more-power/) on JetsonHacks for more details.
 
 It sounds like the Nano module itself is happy with 2A - it's powering additional items from the development board that may push you over 2A.
+
+Power adapters
+--------------
 
 Suitable power adapters from Mouser:
 
@@ -21,9 +24,102 @@ The CUI will require a power cord like this:
 
 If searching for a cord for other countries the important thing is that it has a [C7](https://en.wikipedia.org/wiki/IEC_60320#C7/C8_coupler) connector at one end to connect to the power adapter.
 
-For a much cheaper adapter from a reputable supplier, the ones from Odroid seem suitable:
+For a much cheaper adapter from a reputable supplier, the ones from Hardkernel seem suitable:
 
 * [EU plug](https://www.hardkernel.com/shop/5v-4a-power-supply-eu-plug-2/) - US$5.50
 * [US plug](https://www.hardkernel.com/shop/5v-4a-power-supply-us-plug-2/) - US$5.50
 
-They also have models for all other major plug types.
+They also have models for all other major plug types. And they also have much cheaper power cords:
+
+* [2 pin EU power cord](https://www.hardkernel.com/shop/2pin-eu-power-cord/) - US$0.70
+* [2 pin US power cord](https://www.hardkernel.com/shop/2pin-us-power-cord/) - US$0.70
+
+Barrel jack
+-----------
+
+As noted in the "Use More Power!" blog entry linked to above you'll need to jumper the J48 header on the Nano in order to use the barrel jack.
+
+Suitable jumpers:
+
+* [Adafruit 10 pack](https://www.adafruit.com/product/3525) - US$1
+* [Sparkfun single jumper](https://www.sparkfun.com/products/9044) - US$0.35
+
+Digikey and Mouser have many similar products, e.g.:
+
+* [Sullins closed top jumper](https://www.digikey.com/product-detail/en/sullins-connector-solutions/SPC02SYAN/S9001-ND/76375) from Digikey - US$0.10
+* [Harwin closed top](https://www.mouser.ch/ProductDetail/855-M7686-05) - US$0.36 or [open top](https://www.mouser.ch/ProductDetail/855-M7582-05) - US$0.18
+
+Mouser also stocks the [Adafruit jumpers](https://www.mouser.ch/ProductDetail/485-3525) and the [Sparkfun ones](https://www.mouser.ch/ProductDetail/474-PRT-09044) (at the same price as their respective original vendors).
+
+Male 2.1mm barrel jack plugs:
+
+* [Adafruit screw terminal barrel jack](https://www.adafruit.com/product/369) - US$2
+* [Adafruit solderable barrel jack](https://www.adafruit.com/product/3310) - US$1
+* [Sparkfun screw terminal barrel jack](https://www.sparkfun.com/products/10287) - US$3
+* [Sparkfun solderable barrel jack](https://www.sparkfun.com/products/11476) - US$1
+
+Mouser stock both Adafruit and Sparkfun screw terminal jacks but not the soldarable ones. A suitable soldarable one from Mourser would seem to be:
+
+* [CUI PP3-002A](https://www.mouser.ch/ProductDetail/490-PP3-002A) (which can handle up to 5A) - US$1
+
+Other possibly suitable plugs can be seen in this [search result](https://www.mouser.ch/Connectors/Power-Connectors/DC-Power-Connectors/_/N-axittZ1yzvvqx?P=1z0x8ggZ1z0x878Z1z0x8glZ1z0wxf2Z1z0wxfcZ1z0vlpqZ1z0xbxo&Ns=Pricing|0).
+
+Batteries
+---------
+
+Pololu have a range of suitable switching step-down voltage regulators:
+
+* 5V 5A [D24V50F5](https://www.pololu.com/product/2851) - US$15
+* 5V 6A [D24V60F5](https://www.pololu.com/product/2865) - US$20
+* 5V 9A [D24V90F5](https://www.pololu.com/product/2866) - US$28
+
+The 5A model looks like it would be operating at the edge of its capabilities if the motors and the Nano board were drawing full power.
+
+Unlike the 5A, the 6A and 9A have nice [strain relief](https://a.pololu-files.com/picture/0J5818.1200.jpg?ada7981fba447658ea0884e2f7c9ef31) mounting holes for the power wires.
+
+The 9A model requires an input voltage of around 10V  deliver its maximum _continuous_ output current of 8A. While the 6A model requires around 9V for a little over 6A _continuous_ output (so the 6A model seems to slightly exceed what its name would imply while the 9A one slightly under achieves).
+
+These values are the "maximum continuous output current [each] regulator can deliver with no external heat sinking or added air flow."
+
+So both would seem happy with a 2S or 3S LiPo - with 3S perhaps being slightly better. At higher input voltages thermal shutdown will occur at lower maximum output currents.
+
+Voltage regulators involve a dropout voltage - the input voltage must be a certain minimum amount higher than the desired output voltage. According to the graphs for both the 6A and 9A model a 2S battery _should_ still be just about fine when almost discharged (when its output voltage will be around 6V, down from its nominal voltage of 7.4V and its fully charged voltage of 8.4V).
+
+**Important:** these components can get extremely hot in normal operation - thermal shutdown protection only activates at 160C.
+
+### BECs, UBECs and SBECs
+
+Basically BECs etc. are just brand names for voltage regulators that have now become interchangeable terms. The important thing is if they're linear or switched (much more efficient). For more details see this [Electronic StackExchange answer](https://electronics.stackexchange.com/a/8370/27099) and this [RCGroups thread](https://www.rcgroups.com/forums/showthread.php?1222157-Sbec-ubec-bec-whats-the-difference) (later in it covers linear vs switched in detail).
+
+HobbyKing sell a number of switching BECs:
+
+* [5V 4A continuous from Matek](https://hobbyking.com/en_us/ubec-duo-4a-5-12v-4a-5v.html) - US$17
+* [5V 8A continuous from Turingy](https://hobbyking.com/en_us/turnigy-8-15a-ubec-for-lipoly.html) - US$17
+* [5V 20A continuous from Yep](https://hobbyking.com/en_us/yep-20a-hv-2-12s-sbec-w-selectable-voltage-output.html) - US$16
+
+As always your mileage may vary with these kind of fairly anonymous products.
+
+Choosing a power source
+-----------------------
+
+Radek Jarema has a nice [overview](https://medium.com/husarion-blog/batteries-choose-the-right-power-source-for-your-robot-5417a3ec19ca) of the typical requirements of different robot setups (covering drones, rovers etc.).
+
+The "Small AGV" (automated guided vehicle) section matches out setup well - he recommends a Li-Ion or Li-Po with about 4200mAh - though as he's calculating for a 2 hour working time, one could do with a lot less.
+
+Milliamp Hours
+--------------
+
+The NiMH rechargeable batteries that I'm using the Romi chassis are 1.2V 2100mAh, so that's 2.52Wh per battery for a total of 15.12Wh.
+
+An equivalent 2S LiPo would need to provide 2043mAh and a 3S would need 1362mAh.
+
+See this [online calculator](https://milliamps-watts.appspot.com/) to do the trivial maths involved.
+
+So (for Switzerland) suitable batteries would be e.g.:
+
+* [Swaytronic 1800mAh 3S](https://www.galaxus.ch/de/s5/product/swaytronic-akku-3s-lipo-1110v-1800mah-rc-akku-8614029) - Fr. 27
+* [Swaytronic 2400mAh S2](https://www.galaxus.ch/de/s5/product/swaytronic-akku-lipo-740v-2400mah-rc-akku-3518831) - Fr. 21
+
+Remember a bigger battery means more power but also more weight and a bigger size.
+
+For more suitable batteries from Digitec see these [3S ones](https://www.galaxus.ch/de/s5/producttype/rc-akku-679?tagIds=760&opt=v23-2002%3A11.1%7Cv23-230%3A1.4%7Cv23-230%3A1.45%7Cv23-230%3A1.6%7Cv23-230%3A1.65%7Cv23-230%3A1.7%7Cv23-230%3A1.8%7Cv23-230%3A1.9%7Cv23-230%3A1.95%7Cv23-230%3A2%7Cv23-230%3A2.1%7Cv23-230%3A2.2%7Cv23-230%3A2.4%7Cv23-230%3A2.3%7Cv23-230%3A2.5%7Cv23-230%3A2.7%7Cv23-230%3A3.1%7Cv23-230%3A3.2%7Cv23-230%3A2.8%7Cv23-230%3A3.3&pdo=23-19063%3A353839&so=5) and these [2S ones](https://www.galaxus.ch/de/s5/producttype/rc-akku-679?tagIds=760&opt=v23-2002%3A7.4%7Cv23-230%3A3%7Cv23-230%3A2.6%7Cv23-230%3A2.4%7Cv23-230%3A2.2&so=5&pdo=23-19063%3A353839).
