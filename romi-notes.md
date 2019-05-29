@@ -545,6 +545,8 @@ That's all the soldering finished.
 
 10. Now install the ball caster in the rear socket (the one that's firmly part of the chassis, as opposed to the front one which is supported by a flexible arm).
 
+**Update:** a front caster is also needed - after trying it out without one I found that the whole setup really is quite heavy and when it comes to a sudden halt it would tip forward onto the front edge with a bang. The front socket is only attached to the overall chassis by a thin arm - this looks like the least robust bit of the thing, so be careful installing the front caster (though if you mess things up a replacement [chassis base plate](https://www.pololu.com/product/3516) does just cost US$8). Without a rubber band on the top side of the socket (see the [assembly guide](https://www.pololu.com/docs/0J68/all#4) for more details) it's too flexible (on sudden stops the top of the socket ends up banging off the bottom of the control board). I used a 22x3mm nitrile o-ring (you should be able to pick them up in a hardware store) - it was quite hard to get on but proves to be the perfect size (though at 3mm it's a little too fat - 2.5mm would be better).
+
 11. Put the tires on the wheels and attach the wheels to the motor shafts.
 
 12. Load the battery compartment.
