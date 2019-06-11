@@ -64,6 +64,26 @@ Mouser stock both Adafruit and Sparkfun screw terminal jacks but not the soldara
 
 Other possibly suitable plugs can be seen in this [search result](https://www.mouser.ch/Connectors/Power-Connectors/DC-Power-Connectors/_/N-axittZ1yzvvqx?P=1z0x8ggZ1z0x878Z1z0x8glZ1z0wxf2Z1z0wxfcZ1z0vlpqZ1z0xbxo&Ns=Pricing|0).
 
+**Update:** a [pigtail](https://www.computerlanguage.com/results.php?definition=pigtail) with a barrel plug at one end would probably be more convenient:
+
+* [Banggood 24cm barrel jack pigtail](https://www.banggood.com/DC12V-MaleFemale-Power-Supply-Jack-Connector-Cable-Plug-Cord-Wire-5_5mm-x-2_1mm-p-1182642.html) - US$1.20 (make sure to select the male plug)
+* Digikey - [Tensility 2m barrel jack pigtail](https://www.digikey.com/product-detail/en/tensility-international-corp/CA-2185/CP-2185-ND/568576) - US$2.50
+* Mouser - [Kobicon 2m barrel jack pigtail](https://www.mouser.ch/ProductDetail/172-7443-E) - US$4
+
+2m of cable for the seems rather wasteful but all similar cables from Digikey and Mouser are that length or more.
+
+Oddly it seems better value to buy extension cables or splitters and cut them up rather than buy pigtails:
+
+* [Adafruit 1.5m barrel jack extension cable](https://www.adafruit.com/product/327) - US$3
+* [Sparkfun 1m barrel jack extension cable](https://www.sparkfun.com/products/11706) - US$1.75
+* [Adafruit 4-way barrel jack splitter](https://www.adafruit.com/product/1352) - US$5
+* [Banggood barrel jack to plug 1 to 8 splitter](https://www.banggood.com/5_5-x-2_1mm-Female-To-Male-Plug-DC-Splitter-Connector-For-LED-Lighting-p-975267.html) - US$4
+* Digikey - [Tensility 2-wau barrel jack splitter](https://www.digikey.com/product-detail/en/tensility-international-corp/10-02743/839-1476-ND/8753166) - US$3.80
+
+Mouser don't seem to carry any branded splitters or extension cables but they do carry the Adafruit products.
+
+None of these products seems to very clear on the max-current they can carry, with the exception of Banggood pigtail (which specifies a max-current of 5A). Most of them seem to use stranded 24AWG cable which is a little thin for carrying the 4A that the Nano can take via the barrel jack - 22AWG or lower would be better. Having said that the description for the Adafruit extension cable claims 24AWG is fine up to 5A.
+
 Batteries
 ---------
 
