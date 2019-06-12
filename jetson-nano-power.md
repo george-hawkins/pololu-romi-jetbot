@@ -12,12 +12,13 @@ It sounds like the Nano module itself is happy with 2A - it's powering additiona
 Power adapters
 --------------
 
-Suitable power adapters from Mouser:
+Suitable power adapters:
 
-* Adafruit 5V 4A AC [desktop adapter](https://www.mouser.ch/ProductDetail/485-1466) (comes with US plug only) - US$15 
-* CUI 5V 4A [SDI24-5-UD-P5](https://www.mouser.ch/ProductDetail/490-SDI24-5-UD-P5) (comes without wall plug) - US$15
+* [Pololu 5V 5A wall power adapter](https://www.pololu.com/product/1462) (comes with US plug only) - US$17
+* [Adafruit 5V 4A switching power supply](https://www.adafruit.com/product/1466) (comes with US plug only) - US$15
+* Mouser - [CUI 5V 4A SDI24-5-UD-P5](https://www.mouser.ch/ProductDetail/490-SDI24-5-UD-P5) (comes without wall plug) - US$15
 
-The CUI will require a power cord like this:
+Mouser also carry the Adafruit model. The CUI will require a power cord like this:
 
 * Schurter [6013.0474](https://www.mouser.ch/ProductDetail/693-6013.0474) for the EU - US$3.50
 * Schurter [6010.5274](https://www.mouser.ch/ProductDetail/693-6010.5274) for the US - US$3
@@ -39,20 +40,22 @@ Barrel jack
 
 As noted in the "Use More Power!" blog entry linked to above you'll need to jumper the J48 header on the Nano in order to use the barrel jack.
 
-Suitable jumpers:
+Suitable jumpers / shorting blocks:
 
+* [Pololu 5 pack](https://www.pololu.com/product/970) - US$0.20
 * [Adafruit 10 pack](https://www.adafruit.com/product/3525) - US$1
 * [Sparkfun single jumper](https://www.sparkfun.com/products/9044) - US$0.35
 
 Digikey and Mouser have many similar products, e.g.:
 
-* [Sullins closed top jumper](https://www.digikey.com/product-detail/en/sullins-connector-solutions/SPC02SYAN/S9001-ND/76375) from Digikey - US$0.10
-* [Harwin closed top](https://www.mouser.ch/ProductDetail/855-M7686-05) - US$0.36 or [open top](https://www.mouser.ch/ProductDetail/855-M7582-05) - US$0.18
+* Digikey - [Sullins closed top jumper](https://www.digikey.com/product-detail/en/sullins-connector-solutions/SPC02SYAN/S9001-ND/76375) from Digikey - US$0.10
+* Mouser - [Harwin closed top](https://www.mouser.ch/ProductDetail/855-M7686-05) - US$0.36 or [open top](https://www.mouser.ch/ProductDetail/855-M7582-05) - US$0.18
 
 Mouser also stocks the [Adafruit jumpers](https://www.mouser.ch/ProductDetail/485-3525) and the [Sparkfun ones](https://www.mouser.ch/ProductDetail/474-PRT-09044) (at the same price as their respective original vendors).
 
 Male 2.1mm barrel jack plugs:
 
+* [Pololu screw terminal barrel jack](https://www.pololu.com/product/2448) - US$2
 * [Adafruit screw terminal barrel jack](https://www.adafruit.com/product/369) - US$2
 * [Adafruit solderable barrel jack](https://www.adafruit.com/product/3310) - US$1
 * [Sparkfun screw terminal barrel jack](https://www.sparkfun.com/products/10287) - US$3
@@ -83,6 +86,11 @@ Oddly it seems better value to buy extension cables or splitters and cut them up
 Mouser don't seem to carry any branded splitters or extension cables but they do carry the Adafruit products.
 
 None of these products seems to very clear on the max-current they can carry, with the exception of Banggood pigtail (which specifies a max-current of 5A). Most of them seem to use stranded 24AWG cable which is a little thin for carrying the 4A that the Nano can take via the barrel jack - 22AWG or lower would be better. Having said that the description for the Adafruit extension cable claims 24AWG is fine up to 5A.
+
+Yet more:
+
+* [Hardkernel 27cm barrel jack pigtail](https://www.hardkernel.com/shop/dc-plug-cable-assembly-5-5mm/) - US$1.25
+* [Hardkernel 27cm right-angle barrel jack pigtail](https://www.hardkernel.com/shop/dc-plug-cable-assembly-5-5mm-l-type/) - US$1.25
 
 Batteries
 ---------
