@@ -16,6 +16,7 @@ Suitable power adapters:
 
 * [Pololu 5V 5A wall power adapter](https://www.pololu.com/product/1462) (comes with US plug only) - US$17
 * [Adafruit 5V 4A switching power supply](https://www.adafruit.com/product/1466) (comes with US plug only) - US$15
+* [Sparkfun 5V 4A power supply](https://www.sparkfun.com/products/15352) (comes with US plug only) - US$13
 * Mouser - [CUI 5V 4A SDI24-5-UD-P5](https://www.mouser.ch/ProductDetail/490-SDI24-5-UD-P5) (comes without wall plug) - US$15
 
 Mouser also carry the Adafruit model. The CUI will require a power cord like this:
@@ -53,15 +54,15 @@ Digikey and Mouser have many similar products, e.g.:
 
 Mouser also stocks the [Adafruit jumpers](https://www.mouser.ch/ProductDetail/485-3525) and the [Sparkfun ones](https://www.mouser.ch/ProductDetail/474-PRT-09044) (at the same price as their respective original vendors).
 
-Male 2.1mm barrel jack plugs:
+Male 2.1mm barrel plugs:
 
-* [Pololu screw terminal barrel jack](https://www.pololu.com/product/2448) - US$2
-* [Adafruit screw terminal barrel jack](https://www.adafruit.com/product/369) - US$2
-* [Adafruit solderable barrel jack](https://www.adafruit.com/product/3310) - US$1
-* [Sparkfun screw terminal barrel jack](https://www.sparkfun.com/products/10287) - US$3
-* [Sparkfun solderable barrel jack](https://www.sparkfun.com/products/11476) - US$1
+* [Pololu screw terminal barrel plug](https://www.pololu.com/product/2448) - US$2
+* [Adafruit screw terminal barrel plug](https://www.adafruit.com/product/369) - US$2
+* [Adafruit solderable barrel plug](https://www.adafruit.com/product/3310) - US$1
+* [Sparkfun screw terminal barrel plug](https://www.sparkfun.com/products/10287) - US$3
+* [Sparkfun solderable barrel plug](https://www.sparkfun.com/products/11476) - US$1
 
-Mouser stock both Adafruit and Sparkfun screw terminal jacks but not the soldarable ones. A suitable soldarable one from Mourser would seem to be:
+Mouser stock both the Adafruit and Sparkfun screw terminal plugs but not the soldarable ones. A suitable soldarable one from Mourser would seem to be:
 
 * [CUI PP3-002A](https://www.mouser.ch/ProductDetail/490-PP3-002A) (which can handle up to 5A) - US$1
 
@@ -69,9 +70,10 @@ Other possibly suitable plugs can be seen in this [search result](https://www.mo
 
 **Update:** a [pigtail](https://www.computerlanguage.com/results.php?definition=pigtail) with a barrel plug at one end would probably be more convenient:
 
-* [Banggood 24cm barrel jack pigtail](https://www.banggood.com/DC12V-MaleFemale-Power-Supply-Jack-Connector-Cable-Plug-Cord-Wire-5_5mm-x-2_1mm-p-1182642.html) - US$1.20 (make sure to select the male plug)
-* Digikey - [Tensility 2m barrel jack pigtail](https://www.digikey.com/product-detail/en/tensility-international-corp/CA-2185/CP-2185-ND/568576) - US$2.50
-* Mouser - [Kobicon 2m barrel jack pigtail](https://www.mouser.ch/ProductDetail/172-7443-E) - US$4
+* [Hardkernel 27cm barrel plug pigtail](https://www.hardkernel.com/shop/dc-plug-cable-assembly-5-5mm/) - US$1.25
+* [Banggood 24cm barrel plug pigtail](https://www.banggood.com/DC12V-MaleFemale-Power-Supply-Jack-Connector-Cable-Plug-Cord-Wire-5_5mm-x-2_1mm-p-1182642.html) - US$1.20 (make sure to select the male plug)
+* Digikey - [Tensility 2m barrel plug pigtail](https://www.digikey.com/product-detail/en/tensility-international-corp/CA-2185/CP-2185-ND/568576) - US$2.50
+* Mouser - [Kobiconn 2m barrel plug pigtail](https://www.mouser.ch/ProductDetail/172-7443-E) - US$4
 
 2m of cable for the seems rather wasteful but all similar cables from Digikey and Mouser are that length or more.
 
@@ -81,16 +83,21 @@ Oddly it seems better value to buy extension cables or splitters and cut them up
 * [Sparkfun 1m barrel jack extension cable](https://www.sparkfun.com/products/11706) - US$1.75
 * [Adafruit 4-way barrel jack splitter](https://www.adafruit.com/product/1352) - US$5
 * [Banggood barrel jack to plug 1 to 8 splitter](https://www.banggood.com/5_5-x-2_1mm-Female-To-Male-Plug-DC-Splitter-Connector-For-LED-Lighting-p-975267.html) - US$4
-* Digikey - [Tensility 2-wau barrel jack splitter](https://www.digikey.com/product-detail/en/tensility-international-corp/10-02743/839-1476-ND/8753166) - US$3.80
+* Digikey - [Tensility 2-way barrel jack splitter](https://www.digikey.com/product-detail/en/tensility-international-corp/10-02743/839-1476-ND/8753166) - US$3.80
 
 Mouser don't seem to carry any branded splitters or extension cables but they do carry the Adafruit products.
 
 None of these products seems to very clear on the max-current they can carry, with the exception of Banggood pigtail (which specifies a max-current of 5A). Most of them seem to use stranded 24AWG cable which is a little thin for carrying the 4A that the Nano can take via the barrel jack - 22AWG or lower would be better. Having said that the description for the Adafruit extension cable claims 24AWG is fine up to 5A.
 
-Yet more:
+A **right-angle** plug would probably fit better but they're less common:
 
-* [Hardkernel 27cm barrel jack pigtail](https://www.hardkernel.com/shop/dc-plug-cable-assembly-5-5mm/) - US$1.25
 * [Hardkernel 27cm right-angle barrel jack pigtail](https://www.hardkernel.com/shop/dc-plug-cable-assembly-5-5mm-l-type/) - US$1.25
+* [Banggood 1m right-angle barrel jack pigtail](https://www.banggood.com/DC-1m-5_52_1mm-22AWG-L-Shape-Male-Power-Extension-Cable-Wire-p-1364243.html) - US$1.40
+* [Banggood 4cm right-angle to right-angle barrel plug cable](https://www.banggood.com/DC-Tip-Power-Plug-Jack-Connector-Dual-5_5-x-2_1mm-Male-Right-Angle-Cord-Cable-p-1161332.html) - US$2.40
+* [Banggood soldarable barrel plug](https://www.banggood.com/2_5x5_5mm-Right-Angle-L-90-Male-Plug-Jack-DC-Power-Tip-Socket-Connector-Adapter-p-1023090.html) - US$1.20
+* Digikey - [Tensility 2m right-angle barrel plug pigtail](https://www.digikey.com/product-detail/en/tensility-international-corp/CA-2189/CP-2189-ND/568580) - US$2.50
+* Mourser - [Kobiconn soldarable barrel plug](https://www.mouser.ch/ProductDetail/173-5521TIP-EX) - US$1.50
+
 
 Batteries
 ---------
@@ -114,6 +121,12 @@ So both would seem happy with a 2S or 3S LiPo - with 3S perhaps being slightly b
 Voltage regulators involve a dropout voltage - the input voltage must be a certain minimum amount higher than the desired output voltage. According to the graphs for both the 6A and 9A model a 2S battery _should_ still be just about fine when almost discharged (when its output voltage will be around 6V, down from its nominal voltage of 7.4V and its fully charged voltage of 8.4V).
 
 **Important:** these components can get extremely hot in normal operation - thermal shutdown protection only activates at 160C.
+
+### Power distribution boards
+
+getfpv have a large [range of PDBs](https://www.getfpv.com/electronics/power-distribution-boards-pdb.html?dir=asc&order=price) including ones from Lumenier, like this [one](https://www.getfpv.com/lumenier-4power-mini-pdb.html), that are specifically designed for use with Pololu step-down (though really the ones with a smaller PCB than those listed above).
+
+Banggood obviously also have lots of PDBs (but as usual they're not conveniently catagorized) - suitable looking ones (without additional electronics such as a voltage regulation) include this [one](https://www.banggood.com/30x30-35x35-PCB-ESC-Power-Distribution-Board-For-MINI-Quadcopter-Multicopter-p-984686.html) and this [one](https://www.banggood.com/Martian-Mini-PDB-Power-Distribution-Board-for-Martian-I-II-III-Frame-Kit-p-1081695.html) (the large battery holes are meant to take an XT60 connector).
 
 ### BECs, UBECs and SBECs
 
