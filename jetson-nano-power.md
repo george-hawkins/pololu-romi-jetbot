@@ -126,7 +126,7 @@ Voltage regulators involve a dropout voltage - the input voltage must be a certa
 
 getfpv have a large [range of PDBs](https://www.getfpv.com/electronics/power-distribution-boards-pdb.html?dir=asc&order=price) including ones from Lumenier, like this [one](https://www.getfpv.com/lumenier-4power-mini-pdb.html), that are specifically designed for use with Pololu step-down (though really the ones with a smaller PCB than those listed above).
 
-Banggood obviously also have lots of PDBs (but as usual they're not conveniently catagorized) - suitable looking ones (without additional electronics such as a voltage regulation) include this [one](https://www.banggood.com/30x30-35x35-PCB-ESC-Power-Distribution-Board-For-MINI-Quadcopter-Multicopter-p-984686.html) and this [one](https://www.banggood.com/Martian-Mini-PDB-Power-Distribution-Board-for-Martian-I-II-III-Frame-Kit-p-1081695.html) (the large battery holes are meant to take an XT60 connector).
+Banggood obviously also have lots of PDBs (but as usual they're not conveniently catagorized) - suitable looking ones (without additional electronics such as a voltage regulation) include this [one](https://www.banggood.com/30x30-35x35-PCB-ESC-Power-Distribution-Board-For-MINI-Quadcopter-Multicopter-p-984686.html) and this [one](https://www.banggood.com/Martian-Mini-PDB-Power-Distribution-Board-for-Martian-I-II-III-Frame-Kit-p-1081695.html) (the large battery holes are meant to take an XT60 connector). These odd little [wire extension plates](https://www.banggood.com/12-PCS-Diatone-40A-Brushless-Motor-Wire-Extension-Plate-For-RC-Drone-FPV-Racing-Multi-Rotor-p-1334388.html) from Diatone might also be useful.
 
 ### BECs, UBECs and SBECs
 
