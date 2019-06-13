@@ -55,6 +55,8 @@ The first video introduces PID with practical examples and little maths. In part
 
 The second video covers some short coming of basic PID and solutions to these problems - including integrator anti-windup (which the Arduino PID library supports - see the [reset windup](http://brettbeauregard.com/blog/2011/04/improving-the-beginner%E2%80%99s-pid-reset-windup/) section of Brett's PID blog series).
 
+**Update:** when looking at various PID controller implementations I was surprised how many don't include clamping, i.e. the windup protection, covered here and part of Brett's library - it's a very simple addition.
+
 Videos four to six cover:
 
 * an overview of tuning using either a real/test system or a model
@@ -173,3 +175,55 @@ Note: odometry is a subtype of dead reckoning (see this Robotics StackExchange [
 ---
 
 There are many PID related projects (mainly user notebook writeups) on the main Mbed site - none of them seem terribly detailed, but an iteresting looking one (from the Cookbook Wiki) is the [mbed rover](https://os.mbed.com/cookbook/mbed-Rover) which uses both encoders and an IMC and introduces the mbed quadrature, PID and IMU libraries.
+
+---
+
+Twiddle
+-------
+
+The already mentioed "Programming a robotic car" (CS373) MOOC from Georgia Tech introduces an algorithm called coordinate ascent or twiddle.
+
+The instructor for the course, Sebastian Thrun, describes the algorithm in details in this [YouTube video](https://www.youtube.com/watch?v=2uQ2BSzDvXs).
+
+As well as being part of CS373 this video is part of CS271 - "Intro to artificial intelligence" (where the other instructor is Peter Norvig - director of research at Google). [Sebastian Thrun](https://en.wikipedia.org/wiki/Sebastian_Thrun) was a professor of computer science at Stanford and is now chairman and co-founder of Udacity. He led the team that won the DARPA Grand Challenge in 2005 (and came second in 2007) and led Google's self-driving car project until 2012.
+
+Twiddle is described so in a [Hacker news thread](https://news.ycombinator.com/item?id=16267168):
+
+> Twiddle, AKA coordinate ascent, ... It's basically the same process a human uses to tune PID parameters, cyclically tune one parameter at a time until you're performance is good enough. It's closely related to gradient ascent and suffers from the same problems, namely that it can get trapped in a local minimum, but it's easy to implement and does a good job if you start with an ok guess at the parameters.
+
+Oddly the terms gradient ascent (GA) and gradient descent GD) seem interchageable in these contexts (see the gradient section of the [optimization page](https://frnsys.com/ai_notes/foundations/optimization.html)).
+
+Note: this Electronics StackExchange [answer](https://electronics.stackexchange.com/questions/50049/how-to-implement-a-self-tuning-pid-like-controller) extolls the virtues of the [Nelder-Mead method](https://electronics.stackexchange.com/questions/50049/how-to-implement-a-self-tuning-pid-like-controller) which is a hill climbing simplex algorithm. However this Maths StackExchange [answer](https://math.stackexchange.com/a/2419865) seems to make clear that such gradient-free optimization methods will tend to converge slower and have weaker convergence guarantees than gradient-based methods. So from this I take it that, while it has limitations, Twiddle will perform better than such methods.
+
+The playlist for the full CS373 course can be found [here](https://www.youtube.com/playlist?list=PL00A5201296749516).
+
+Implementing Twiddle in Python is an exercise that's part of the nanodegree of which CS373 is a part. James Dunn presents a solution [here](https://github.com/jwdunn1/CarND-PID-Parameter-Optimization) with an apparent improvement that Andres Castano came up with on the Udacity course forum (I asked James for more details on this [here](https://github.com/jwdunn1/CarND-PID-Parameter-Optimization/issues/1)).
+
+Another Python implementation can be found [here](https://martin-thoma.com/twiddle/) - as can be seen it's trivial. The author notes:
+
+> I guess gradient descent might be better for most cases, but Twiddle does not require any knowledge about the algorithm _A_ which might be a big advantage. And you don't have to calculate the gradient of high dimensional functions, which is nice, too.  
+
+Where _A_ is the algorithm that determines the error when given a particular parameter vector.
+
+---
+---
+
+TODO: I'm sure this links are all part of one big section - find out the structure.
+
+["PID autotuning in real time"](https://ch.mathworks.com/help/slcontrol/ug/pid-autotuning-in-real-time.html)
+["How PID autotuning works"](https://ch.mathworks.com/help/slcontrol/ug/how-pid-autotuning-works.html)
+
+["PID controller tuning (automatic tuning of PID gains in Simulink® and real-time environments)"](https://ch.mathworks.com/help/slcontrol/cat-scd-pid-controller-tuning.html) - is this the root?
+
+* ["Model-based PID controller tuning"](https://ch.mathworks.com/help/slcontrol/automatic-pid-tuning.html)
+* ["Real-time PID autotuning"](https://ch.mathworks.com/help/slcontrol/cat_scd_pid_autotuning.html)
+
+---
+
+[pypid](https://pypi.org/project/pypid/) - Python PID controller with autotuning. It was developed between 2008 and 2014 - since then Jan Binder has a [version](https://github.com/drogenlied/pypid) on Github that's been ported to Python 3 and has various fixes.
+
+---
+
+TODO: work this in elsewhere.
+
+[Manual tuning section](https://en.wikipedia.org/wiki/PID_controller#Manual_tuning) of the Wikipedia page for PID controller.
