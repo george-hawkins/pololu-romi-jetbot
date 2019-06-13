@@ -164,3 +164,10 @@ So (for Switzerland) suitable batteries would be e.g.:
 Remember a bigger battery means more power but also more weight and a bigger size.
 
 For further suitable batteries from Digitec see these [3S ones](https://www.galaxus.ch/de/s5/producttype/rc-akku-679?tagIds=760&opt=v23-2002%3A11.1%7Cv23-230%3A1.4%7Cv23-230%3A1.45%7Cv23-230%3A1.6%7Cv23-230%3A1.65%7Cv23-230%3A1.7%7Cv23-230%3A1.8%7Cv23-230%3A1.9%7Cv23-230%3A1.95%7Cv23-230%3A2%7Cv23-230%3A2.1%7Cv23-230%3A2.2%7Cv23-230%3A2.4%7Cv23-230%3A2.3%7Cv23-230%3A2.5%7Cv23-230%3A2.7%7Cv23-230%3A3.1%7Cv23-230%3A3.2%7Cv23-230%3A2.8%7Cv23-230%3A3.3&pdo=23-19063%3A353839&so=5) and these [2S ones](https://www.galaxus.ch/de/s5/producttype/rc-akku-679?tagIds=760&opt=v23-2002%3A7.4%7Cv23-230%3A3%7Cv23-230%3A2.6%7Cv23-230%3A2.4%7Cv23-230%3A2.2&so=5&pdo=23-19063%3A353839).
+
+Monitoring voltage
+------------------
+
+The Romi control board can monitor the total voltage but if you want to monitor per-cell voltage..
+
+TODO: work in information you included in this [Pololu forum post](https://forum.pololu.com/t/monitoring-a-lipo-batterys-balance-connector/17294) covering the MLVSS sensor and libraries - and build it yourself approaches.
