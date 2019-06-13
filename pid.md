@@ -91,7 +91,11 @@ Stephen Dale has already done this with a cheap Kakute F4 flight controller - US
 
 At the moment this setup isn't using feedback from encoders, i.e. it's open loop, but in this [separate post](https://discuss.ardupilot.org/t/good-ideas-for-design-of-phone-based-control-for-2-wheel-robot/42885/6?u=ghawkins) Stephen says he's working on this. Unfortunately (IMHO) he's going to switch to the more expensive and significantly larger Pixhawk for this - in my replies to this post I ask about getting encoder reading working with the F4 or possibly the F7. It seems this should definitely be possibly if one [recompiles](http://ardupilot.org/dev/docs/building-the-code.html) ArduPilot with a modified `hwdef.dat` file.
 
-Compare the pins used for motor control in the Kakute F7 [`hwdef.dat`](https://github.com/ArduPilot/ardupilot/blob/master/libraries/AP_HAL_ChibiOS/hwdef/KakuteF7/hwdef.dat) (search for `PWM(3)`), the PWM pins for the Pixhawk [`hwdef.dat`](https://github.com/ArduPilot/ardupilot/blob/master/libraries/AP_HAL_ChibiOS/hwdef/fmuv3/hwdef.dat) (again search for `PWM(3)`) and the AUX pins mentioned in the rover [wheel encoder documentation](http://ardupilot.org/rover/docs/wheel-encoder.html) (3, 4, 5 and 6). If the Romi setup only used a pin per motor (as is the case with a quadcopter where each motor has its own [ESC](https://en.wikipedia.org/wiki/Electronic_speed_control)) then it looks like you would be able to use 3, 4, 5 and 6 for the encoders without needing to recompile ArduPilot. However as seen in the blog post two pins are required per motor in the Romi rover configuration. But perhaps it would be possible to reassign the pins of the additional UARTs, that the F7 has, for use with the encoders - unfortunately looking at [`WENC_PINA`](http://ardupilot.org/rover/docs/parameters.html#wenc-pina-input-pin-a) etc. it looks like you can only choose from a small predefined set of possible pins.
+Compare the pins used for motor control in the Kakute F7 [`hwdef.dat`](https://github.com/ArduPilot/ardupilot/blob/master/libraries/AP_HAL_ChibiOS/hwdef/KakuteF7/hwdef.dat) (search for `PWM(3)`), the PWM pins for the FMUv3 [`hwdef.dat`](https://github.com/ArduPilot/ardupilot/blob/master/libraries/AP_HAL_ChibiOS/hwdef/fmuv3/hwdef.dat) (again search for `PWM(3)`) that's included into and makes up the bulk of the Pixhawk1 `hwdef.dat` - then see the [GPIOs section](https://github.com/ArduPilot/ardupilot/tree/master/libraries/AP_HAL_ChibiOS/hwdef/Pixhawk1#gpios) of the Pixhawk1 hwdef README. Then look at the AUX pins mentioned in the rover [wheel encoder documentation](http://ardupilot.org/rover/docs/wheel-encoder.html) (3, 4, 5 and 6). If the Romi setup only used a pin per motor (as is the case with a quadcopter where each motor has its own [ESC](https://en.wikipedia.org/wiki/Electronic_speed_control)) then it looks like you would be able to use 3, 4, 5 and 6 for the encoders without needing to recompile ArduPilot. However as seen in the blog post two pins are required per motor in the Romi rover configuration. But perhaps it would be possible to reassign the pins of the additional UARTs, that the F7 has, for use with the encoders - unfortunately looking at [`WENC_PINA`](http://ardupilot.org/rover/docs/parameters.html#wenc-pina-input-pin-a) etc. it looks like you can only choose from a small predefined set of possible pins.
+
+The wheel encoder code can be found [here](https://github.com/ArduPilot/ardupilot/tree/master/libraries/AP_WheelEncoder) and the developer documentation for sensor drivers can be found [here](http://ardupilot.org/dev/docs/code-overview-sensor-drivers.html)
+
+Note: Paul Atkin who contributed much of the Kakute F7 `hwdef.dat` (along with [Tridge](https://github.com/tridge), see [commits](https://github.com/ArduPilot/ardupilot/commits/master/libraries/AP_HAL_ChibiOS/hwdef/KakuteF7/hwdef.dat) also participates on Betaflight (e.g. see this [comment](https://github.com/betaflight/betaflight/issues/6306#issuecomment-410688853) where he cross-posts information gathered while working on ArduPilot).
 
 While ArduCopter can [autotune its PID values](http://ardupilot.org/copter/docs/autotune.html), this functionality is not available in ArduRover but there is [GitHub issue](https://github.com/ArduPilot/ardupilot/issues/8851) to add it. Until then you have to use the tuning guides for steering and speed that are found in the [first drive](http://ardupilot.org/rover/docs/rover-first-drive.html) section of the ArduRover documentation to do this manually.
 
@@ -121,6 +125,8 @@ Here covers things like:
 His goal setting example where he tells the robot to achieve a position 5m ahead of its current position is very interesting. It'll work it's way out thru doors etc. to get to that location even if there are walls in the way. I suspect though that if there's a wall in the way it depends on door placement as to whether it ever gets to its goal - without building up some kind of [SLAM](https://en.wikipedia.org/wiki/Simultaneous_localization_and_mapping)-like awareness of its environment it can presumably quite easily end up in long cycles. Though perhaps odometry is enough to tell that it's returned to a location it has already visited and cause it to change its behavior.
 
 TODO: this goal achieving, as the lowest priority behavior behind more immediate responses like avoiding obstacles, results in impressive behavior - it would be nice to wire in the Nano, as if it were an IR sensor, to an Ardupilot setup so Ardupilot could achieve goals with the Nano providing an avoidance behavior (though it seems backwards that the STM32 controller manages the overall process while all the power of the Nano just provides an avoidance behavior).
+
+David mentions his (very 90s) home page in his video - it can be found [here](http://www.geology.smu.edu/dpa-www/myrobots.html). In his talk he mentions subsumption architecture (see [here](https://en.wikipedia.org/wiki/Subsumption_architecture)) on Wikipedia) and his home page links to a long [article](http://www.geology.smu.edu/dpa-www/robo/subsumption/) that's he written on subsumption that provides more details on much that he covers in the video.
 
 ---
 
@@ -213,10 +219,15 @@ TODO: I'm sure this links are all part of one big section - find out the structu
 ["PID autotuning in real time"](https://ch.mathworks.com/help/slcontrol/ug/pid-autotuning-in-real-time.html)
 ["How PID autotuning works"](https://ch.mathworks.com/help/slcontrol/ug/how-pid-autotuning-works.html)
 
-["PID controller tuning (automatic tuning of PID gains in Simulink® and real-time environments)"](https://ch.mathworks.com/help/slcontrol/cat-scd-pid-controller-tuning.html) - is this the root?
+["PID controller tuning (automatic tuning of PID gains in Simulink and real-time environments)"](https://ch.mathworks.com/help/slcontrol/cat-scd-pid-controller-tuning.html) - is this the root?
 
 * ["Model-based PID controller tuning"](https://ch.mathworks.com/help/slcontrol/automatic-pid-tuning.html)
+  * ["Introduction to model-based PID tuning in Simulink"](https://ch.mathworks.com/help/slcontrol/ug/introduction-to-automatic-pid-tuning.html)
 * ["Real-time PID autotuning"](https://ch.mathworks.com/help/slcontrol/cat_scd_pid_autotuning.html)
+
+---
+
+The Matlab YouTube series also on the [Matlab site](https://ch.mathworks.com/videos/series/understanding-pid-control.html).
 
 ---
 
@@ -227,3 +238,9 @@ TODO: I'm sure this links are all part of one big section - find out the structu
 TODO: work this in elsewhere.
 
 [Manual tuning section](https://en.wikipedia.org/wiki/PID_controller#Manual_tuning) of the Wikipedia page for PID controller.
+
+Another Arduino [PID autotune library](https://forum.phpoc.com/blogs/iot-lover/1289-arduino-pid-controller-auto-tuning-library-and-example-for-dc-motor).
+
+Electronics StackExchange [answer](https://electronics.stackexchange.com/q/368107/27099) on detecting that a DC motor has stalled, i.e. is stuck.
+
+Using [accelerometer data](https://www.allaboutcircuits.com/projects/how-to-protect-your-robot-with-automatic-collision-detection/) to detect that your Romi has collided.
