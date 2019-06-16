@@ -124,6 +124,8 @@ Note: [Paul Atkin](https://github.com/utkinpol) who contributed much of the Kaku
 
 While ArduCopter can [autotune its PID values](http://ardupilot.org/copter/docs/autotune.html), this functionality is not available in ArduRover but there is a [GitHub issue](https://github.com/ArduPilot/ardupilot/issues/8851) to add it. Until then you have to use the tuning guides for steering and speed that are found in the [first drive](http://ardupilot.org/rover/docs/rover-first-drive.html) section of the ArduRover documentation to do this manually.
 
+Note: obviously if you use a basic motor controller like the one Stephen does then you don't get the buzzer, LEDs and power switch of the Romi controller board but of course the Kakute supports attaching a buzzer and LEDs.
+
 David Anderson overview of robot control software
 -------------------------------------------------
 

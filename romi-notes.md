@@ -39,9 +39,11 @@ There's a voltage divider that allows you to monitor the voltage decreasing as t
 
 Four pins are used to read the data from the quadrature encoders - the encoders provide a feedback loop, you can tell the motors to turn faster but how much the wheels actually turn is dependent on various factors (they may not turn at all if the robot is stuck) - the encoders report the actual turning.
 
-The board has an LSM9DS0 - a 9-DOF accelerometer, gyro and magentometer. It's connected to the boards I2C bus. Instead of reading the LSM9DS0 datasheet, as suggested, it's easier to work with it using CircuitPython as covered in this [Adafruit guide](https://learn.adafruit.com/adafruit-lsm9ds0-accelerometer-gyro-magnetometer-9-dof-breakouts?view=all) (where it corresponds to the Flora, i.e. I2C only).
+The board has an LSM6DS33 - a 6-DOF accelerometer and gyro. It's connected to the boards I2C bus. Pololu suggest reading the LSM6DS33 datasheet but I'm not sure how much is gained by that - their product page for their separate [LSM6DS33 breakout](https://www.pololu.com/product/2736) probably contains as much information as most people would want (note that on the Romi control board only I2C is supported whearas the breakout also supports SPI).
 
-The LSM9DS0 has the I2C slave 7-bit address 1101011.
+The LSM6DS33 has the I2C slave address 1101011, i.e. 0x6B. This address is also used by the 9-DOF LSM9DS0 (see the Adafruit [table of I2C addresses](https://learn.adafruit.com/i2c-addresses/the-list)) which also features a magnotometer. A magnotometer would have been a nice addition for dead-reakoning but perhaps it would have been useless on the control board (as a result of being overwhelmed by electrical noise from the motors).
+
+Note: one could use e.g. an [LSM303D](https://www.pololu.com/product/2127) as a separate compass and raise it up on a mast to escape electrical noise (as is common on drones where this is generally done with a combined GPS and compass). There are no end of options when it comes to compasses combined with other sensors, so this would require more investigation for a given setup - the LSM303D is just mentioned here as an _example_.
 
 The slider switch should *always* be left in the off position - otherwise it disrupts the proper functioning of the push button power switch. The slider only comes into proper use if you cut the _Btn Jmp_ jumper and use it instead of the push button power switch. This looks like a potential source of confusion!
 
@@ -199,9 +201,9 @@ There are some pretty interesting examples here so it's worth looking thru them 
 
 E.g. try out the InertialSensors example, it depends on the LSM6 library - so go back to Manage Libraries... as above and this time search for "lsm6". There are several LSM6 libraries - select and install the one from Pololu.
 
-Note: this library is really for the LSD6DS33, whereas the control board has a LSM9DS0 - presumably they have a compatible interface. If you search you'll see libraries for the LSM9DS0 from Adafruit, Sparkfun and others.
-
 Once the library is installed you can open and upload the InertialSensors, then go to Tools / Serial Monitor and see the output from the sketch (assuming "9600 baud" is selected in the monitor). If you pick up and turn the board in every direction you'll see the output values changing to reflect this.
+
+The Pololu [LSM6 Arduino library](https://github.com/pololu/lsm6-arduino) just outputs raw 16-bit values read directly from the sensor - the comment at the start of the [InertialSensors example code](https://github.com/pololu/lsm6-arduino/blob/master/examples/Serial/Serial.ino) notes how you can covert these into something more meaningful. This kind of unit conversion is discussed in the [demo sketch section](https://learn.adafruit.com/adafruit-lsm9ds0-accelerometer-gyro-magnetometer-9-dof-breakouts?view=all#load-demo-sketch-4-11) of the Adafruit tutorial for the LSM9DS0 where they introduce their [sensor driver](https://github.com/adafruit/Adafruit_Sensor) for doing this. The LSM9DS0 is basically an LSM6DS33 with a magnotometer (Adafruit have actually discontinued their LSM9DS0 breakout and replaced it with a cheaper and somwhat less accurate [LSM9DS1 one](https://www.adafruit.com/product/3387)).
 
 You can find full documentation for the classes and functions of the Romi32U4 library [here](http://pololu.github.io/romi-32u4-arduino-library/).
 
@@ -281,8 +283,8 @@ Note that `1` is the bus number taken from `i2c-1` above - it isn't a given that
 
 So we see two addresses:
 
-* 0x6b is the LSM9DS0 on the control board (see `0b1101011`, i.e. 0x6b in binary, being used in [`LSM6.cpp`](https://github.com/pololu/lsm6-arduino/blob/master/LSM6.cpp).
-* 0x14 is the MCU on the control board (see `20`, i.e. 0x14 in decimal, being used in [`pi/a_star.py`](https://github.com/pololu/pololu-rpi-slave-arduino-library/blob/master/pi/a_star.py)).
+* 0x6b is the LSM6DS33 on the control board (see `0b1101011`, i.e. 0x6b, being used in [`LSM6.cpp`](https://github.com/pololu/lsm6-arduino/blob/master/LSM6.cpp).
+* 0x14 is the MCU on the control board (see `20`, i.e. 0x14, being used in [`pi/a_star.py`](https://github.com/pololu/pololu-rpi-slave-arduino-library/blob/master/pi/a_star.py)).
 
 Now on the Nano
 ---------------
@@ -610,7 +612,7 @@ The `5` is a delay used to workaround the BCM283* I2C bug. For the Jetson Nano i
 
 OK - enough about the I2C bug - back to the Pi and control board code being so small...
 
-The real work is actually all in the separate [romi-32u4-arduino-library](https://github.com/pololu/romi-32u4-arduino-library) that provides all the classes needed to interface with the motors, encoders, buttons, LEDs and buzzer. And don't forget there's a separate library (that isn't pulled in for this setup) for the LSM9DS0.
+The real work is actually all in the separate [romi-32u4-arduino-library](https://github.com/pololu/romi-32u4-arduino-library) that provides all the classes needed to interface with the motors, encoders, buttons, LEDs and buzzer. And don't forget there's a separate library (that isn't pulled in for this setup) for the LSM6DS33.
 
 A better IDE
 ------------

@@ -78,6 +78,8 @@ Note that the letter (F, L or G) before the "-D-RA" bit denotes the plating - F 
 
 And just choose look what's in stock and seems like good value - I chose TSW-116-08-F-D-RA.
 
+**Update:** just order the header as part of the Pololu order - 2x40 pin - <https://www.pololu.com/product/2668>
+
 ---
 
 While not in the BOM they stick down the WiFi module with what looks like polyimide tape, i.e. temperature resistant and non-conductive tape - <https://www.adafruit.com/product/3057>
@@ -251,3 +253,9 @@ The Fr. 120 amount and the exchange rate don't come from the FedEx bill instead 
 It's a password protected zip file and you have to use the Zugangscode here again as the password.
 
 So the postage was "free" on an item that cost just US$99 but then an additional Fr. 32.95. And it's odd that it's hard to reconsile how FedEx determined the actual MwSt. involved and how Die Post did it.
+
+TODO: work in this response from FedEx regarding the figures:
+
+> Shipment 495105461730 was customs cleared according to the invoice (copy attached) provided by the shipper: value US $ 99.- without any Incoterm (shipping/sales method).
+> In this case, the value for customs is: goods value US $ 99.- + freight charges Swiss Francs 19.- = CHF 120.-. 
+> According to the Swiss VAT law Art 54.- freight charges are subject to import VAT
