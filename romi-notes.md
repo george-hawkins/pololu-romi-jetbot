@@ -53,6 +53,8 @@ The power regulator has a maximum continuous output current of a little under 2.
 
 TODO: try powering the Pi seperatly and see how much current the MCU, encoders, motor drivers and motors draw - the motors have a stall current of 1.25A each and apparently you should run such motors at around 20% to 30% of this (see [here](https://www.pololu.com/product/1520/faqs). So 25% of the two motors would be 1A which doesn't leave much for the Nano.
 
+**Update:** according to this [post](https://forum.pololu.com/t/rpi5v-on-romi-control-board-maxes-out-at-500ma/17339/3?u=ghawkins), from Kevin at Pololu, "the motors are not powered from the regulated voltage, so the current they draw doesn’t reduce what’s available from VREG" - this seems to contradict the control board user guide that says "VREG is generally used to supply logic power for the ATmega32U4, **motor drivers**, and encoders. The rest of the regulator's achievable output current [...] can be used to power other devices [...]. Under typical conditions, up to 2 A of current is available from the VREG output."
+
 2A is the maximum the Nano can draw via the USB power connector but it can apparently consume a lot more if powered via the the barrel jack - it'd be interesting to monitor the Nano's current draw, does it max out at 2A (implying it might consume more if it were available)?
 
 For more on powering the Nano and why you should switch to 4A at 5V see this Jetson Hacks [page](https://www.jetsonhacks.com/2019/04/10/jetson-nano-use-more-power/).
