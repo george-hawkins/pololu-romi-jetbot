@@ -31,11 +31,8 @@ Most useful page so far - the RidgeRun page of using [GStreamer with the Jetson 
 
 There's a near identical [page](https://developer.ridgerun.com/wiki/index.php?title=Gstreamer_pipelines_for_Jetson_TX2) for the TX2. The two have diverged slightly - the TX1 page seems to have more reference links - the only section that the TX2 page has that the TX1 doesn't is the short piece on using VLC in the [H264 UDP streaming section](https://developer.ridgerun.com/wiki/index.php?title=Gstreamer_pipelines_for_Jetson_TX2#H264_UDP_Streaming).
 
----
-
-Intro the GStreamer and Jetson by Peter Moran - <http://petermoran.org/csi-cameras-on-tx2/>
-
----
+GStreamer basics
+----------------
 
 Introduction to the GStreamer tools - <https://gstreamer.freedesktop.org/documentation/tutorials/basic/gstreamer-tools.html>
 
@@ -87,13 +84,14 @@ Kill `gst-launch` and look at the graphs use `xdot`:
 
 Xdot doesn't have much in the way of a user interface - the author also suggests ZGRViewer in the [links section](https://github.com/jrfonseca/xdot.py#links) of the xdot github page, ZGRViewer is a moribund project (unlike xdot which is actively developed) that provides a Java viewer, that still works fine despite no updates since 2015. While _looking_ far fancier it doesn't seem to offer any additional features over xdot when it comes to the pipeline graphs and for this situation is actually less convenient to use.
 
+Miscellaneous
+-------------
+
+Intro the GStreamer and Jetson by Peter Moran - <http://petermoran.org/csi-cameras-on-tx2/>
+
 ---
 
 JetsonHacks has a nice simple [github repo](https://github.com/JetsonHacksNano/CSI-Camera) for getting started with a CSI camera on the Nano.
-
-It covers using `v4l2-ctl` to list what the camera is capable of.
-
-TODO: what other useful V4L2 tools are there?
 
 TODO: this repo uses the element `nvarguscamerasrc` while other pages (including Peter Moran) use `nvcamerasrc` - what's the difference? And how's it different to using `v4l2src device=/dev/video0` - you can see `v4l2src` and `nvcamerasrc` being used [here](https://devtalk.nvidia.com/default/topic/1037844/jetson-tx2/capture-raw-video-through-gstreamer-with-csi-cameras/) to achieve the same affect with a Jetson TX2.
 
@@ -104,15 +102,6 @@ Peter Moran's page links to the eLinux Jetson/Cameras [wiki page](https://elinux
 * The Raspberry Pi V2 camera module - $25
 * The Leopard Imaging [LI-IMX219-MIPI-FF-NANO](https://leopardimaging.com/product/li-imx219-mipi-ff-nano/) - $29
 * The e-Con systems [e-CAM30_CUNANO](https://www.e-consystems.com/nvidia-cameras/jetson-nano-cameras/3mp-mipi-camera.asp) - US$79
-
----
-
-See RidgeRun's very detailed wiki pages on working with GStreamer on Jetson boards:
-
-* [TX1](https://developer.ridgerun.com/wiki/index.php?title=Gstreamer_pipelines_for_Jetson_TX1)
-* [TX2](https://developer.ridgerun.com/wiki/index.php?title=Gstreamer_pipelines_for_Jetson_TX2)
-
-These cover many more tools than just GStreamer. Are they essentially identical?
 
 ---
 
