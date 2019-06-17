@@ -237,6 +237,8 @@ PHPoC (an IoT company built around the idea of using a PHP based controller to r
 
 I left a comment (using a throw away email address generated using [TempMail](https://temp-mail.org/)) asking about the missing library.
 
+**Update:** they posted the code in response to my comment - and contrary to what I thought, the PID autotuning code is part of the Arduino sketch. It looks worth taking a look at. I don't know why there also seems to be autotuning code in the already available PHP source.
+
 Collision detection
 -------------------
 
