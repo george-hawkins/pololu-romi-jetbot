@@ -179,6 +179,8 @@ It's 163mm front to back and 125mm between the wheels.
 
 ---
 
+<http://timdettmers.com/2019/04/03/which-gpu-for-deep-learning/>
+
 Host system GPU:
 
 * <https://www.digitec.ch/de/s1/product/msi-geforce-rtx-2060-ventus-oc-6gb-midrange-grafikkarte-10293393>
@@ -186,7 +188,23 @@ Host system GPU:
 
 They seem to be identical cards except for differences is card dimensions.
 
-<http://timdettmers.com/2019/04/03/which-gpu-for-deep-learning/>
+MSI actually have four variants of the GeForce RTX 2060 Ventus: <https://www.msi.com/comparison/graphics-card/?compare_list=[%22R2VGb3JjZS1SVFgtMjA2MC1WRU5UVVMtNkc=%22,%22R2VGb3JjZS1SVFgtMjA2MC1WRU5UVVMtWFMtNkctT0M=%22,%22R2VGb3JjZS1SVFgtMjA2MC1WRU5UVVMtNkctT0M=%22,%22R2VGb3JjZS1SVFgtMjA2MC1WRU5UVVMtWFMtNkc=%22]>
+
+OC probably means overclocked - the OC models run at 1710MHz while the non-OC ones run at 1680MHz.
+XS probably mean extra short - the XC models are 205mm long while the non-XS ones are 226mm long.
+
+Note: sellers seem to be a bit confused about what model they're selling. Two models numbers, V375-017R and V375-035R, seem to be commonly available in German speaking countries - the V375-017R is generally described as the OC model, while the V375-035R is sometimes described as just XS and sometimes as XS OC. The MSI site doesn't help - it doesn't seem to list these model numbers anywhere.
+
+Note: that these cards consume about 160W at full power and that MSI recommend a 500W PSU. My Dell has a 290W PSU - so I'd need something like this <https://www.digitec.ch/de/s1/product/seasonic-focus-plus-gold-550w-pc-netzteil-6392517>
+
+Note: a 450W PSU is significantly cheaper than a 550W one, e.g.:
+
+*  <https://www.digitec.ch/de/s1/product/ratings/corsair-vs450-2018-450w-pc-netzteil-7776750> (it hasn't got 5 stars due to complaints about lack of a Swiss power cable).
+* <https://www.digitec.ch/de/s1/product/seasonic-focus-gold-450w-pc-netzteil-11163036>
+
+The Tim Dettmers's hardware guide (the link up above is his to his GPU specific guide): <https://timdettmers.com/2018/12/16/deep-learning-hardware-guide/>
+
+Here he says you should buy a PSU the covers the CPU and GPU wattage plus 10% on-top for everything else. So with my Dell the CPU is 84W, this plus a 160W GPU plus 10% extra is just 270W which seems within the limits of the system's existing 290W supply.
 
 ---
 
