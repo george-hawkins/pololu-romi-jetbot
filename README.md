@@ -4,7 +4,7 @@ Romi Jetbot
 * [`romi-jetbot-bom.md`](romi-jetbot-bom.md) - bill-of-materials for my Romi Jetbot.
 * [`jetson-nano-notes.md`](jetson-nano-notes.md) - first-time setup notes for the Nano.
 * [`jetson-nano-wifi.md`](jetson-nano-wifi.md) - installing the Intel WiFi module on the Nano development board.
-* [`gstreamer-nano.md`](gstreamer-nano.md) - streaming video from the Nano using GStreamer.
+* [`jetson-nano-gstreamer.md`](jetson-nano-gstreamer.md) - streaming video from the Nano using GStreamer.
 * [`jetson-power-management/README.md`](jetson-power-management/README.md) - waking the Nano after shutdown without disconnecting and reconnecting the USB power connector.
 * [`romi-notes.md`](romi-notes.md) - notes on the Romi - in particular the control board, the basic build and using it with the Pi and Nano.
 * [`jetson-nano-power.md`](jetson-nano-power.md) - powering the Nano via the barrel jack using a wall power adapter or batteries.

@@ -705,3 +705,8 @@ Set I2C bus speed at startup
     $ systemctl enable i2c-1-400kHz
 
 See the `i2c-1-400kHz.service` file itself for more details.
+
+Camera
+------
+
+The original module is backed by a little circle of sponge and a little sticky gel pad (like the gel that holds ads on cards in place in magazines). It's easy to peal the module off and scape off any remaining gel on the PCB.
