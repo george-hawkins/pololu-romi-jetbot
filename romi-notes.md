@@ -716,3 +716,238 @@ Camera
 ------
 
 The original module is backed by a little circle of sponge and a little sticky gel pad (like the gel that holds ads on cards in place in magazines). It's easy to peal the module off and scape off any remaining gel on the PCB.
+
+Software setup
+--------------
+
+Using the ["from scratch"](https://github.com/NVIDIA-AI-IOT/jetbot/wiki/Create-SD-Card-Image-From-Scratch) Jetbot wiki page as a basis, we can start at step 4 as we've already got the basics setup.
+
+### Preliminaries
+
+Install PIP (Python Package Installer - see the [PIP documentation](https://pip.pypa.io/en/stable/) and the the [overview of packaging for Python](https://packaging.python.org/overview/)) and PIL (the Python 3 [Pillow fork](https://pillow.readthedocs.io/en/stable/handbook/overview.html) of the Python Imaging Library):
+
+    $ sudo apt-get update
+    $ sudo apt install python3-pip python3-pil
+
+During installation it asked me if I wanted to "restart services during package upgrades without asking" - the default was no but I switched this to yes.
+
+You can see that [NumPy](https://www.numpy.org/) (the primary scientific computing package for Python) has already been installed with Ubuntu [apt](https://help.ubuntu.com/lts/serverguide/apt.html):
+
+    $ apt list --installed | fgrep numpy
+    python-numpy/bionic,now 1:1.13.3-2ubuntu1 arm64 [installed]
+
+But this is the Python 2 version of NumPy. We _could_ install `python3-numby` with apt but instead we get PIP to install the latest Python 3 version:
+
+    $ sudo -H pip3 install -U numpy
+
+This takes a little while (5 minutes on my Nano).
+
+Note: here I always use `sudo -H pip3` whereas the original "from scratch" wiki page does not - using `-H` (which sets the `HOME` environment variable to that of the target user, i.e. root in this case) stops PIP complaining about ownership issues to do with directories under `~/.cache/pip`.
+
+If you install it with `sudo` then it ends up under `/usr/local/lib/python3.6/dist-packages`:
+
+    $ pip3 show numpy
+
+We could install NumPy just for the current user by omitting the `sudo`. In which case it would end up under `~/.local/lib/python3.6/site-packages`. But as we're planning to run things later via systemd services it's easier to just install things globally.
+
+**Update:** actually the systemd service files generated later run as the user who does all this work here, rather than running as root, so it probably would be fine to skip all the sudo-ing for all the `pip3 install` commands.
+
+### TensorFlow
+
+The install the pre-built [TensorFlow](https://www.tensorflow.org/) pip wheel (as described [here](https://docs.nvidia.com/deeplearning/frameworks/install-tf-jetson-platform/index.html))...
+
+Install the Tensor Flow dependencies:
+
+    $ sudo apt install libhdf5-serial-dev hdf5-tools libhdf5-dev zlib1g-dev zip libjpeg8-dev
+
+We've already installed `python-pip3` and it's ended up under `/usr/bin` and `/usr/lib/python3/dist-packages/pip`:
+
+    $ type pip3
+    $ dpkg-query -L python3-pip
+
+We can see the version installed like so:
+
+    $ pip3 --version
+    pip 9.0.1 from /usr/lib/python3/dist-packages (python 3.6)
+
+And now ask PIP to upgrade itself to the very latest version:
+
+    $ sudo -H pip3 install -U pip
+
+Unfortunately this breaks the `pip3` wrapper under `/usr/bin`:
+
+    $ pip3 --version
+    Traceback (most recent call last):
+      File "/usr/bin/pip3", line 9, in <module>
+        from pip import main
+    ImportError: cannot import name 'main'
+
+This seems to be an ancient and well covered issue - see this [SO question](https://stackoverflow.com/q/28210269/245602) (the title refers to Windows 7 but it's not Windows specific). It happens if the original `pip3` is earler than version 10 (as is the case here).
+
+You can either avoid the wrapper altogether and use PIP via `python3` like so:
+
+    $ python3 -m pip --version
+    pip 19.1.1 from /usr/local/lib/python3.6/dist-packages/pip (python 3.6)
+
+Or (as I did) you can edit the wrapper:
+
+    $ sudo vim /usr/bin/pip3
+
+And update it as per this [SO answer](https://stackoverflow.com/a/49900741/245602), i.e. change the `main` in the `import` line to `__main__` and preceed the `main()` in the `sys.exit` line with `__main__._` (note the `_` after the dot).
+
+Now install various Python packages:
+
+    $ sudo -H pip3 install -U numpy grpcio absl-py py-cpuinfo psutil portpicker six mock requests gast h5py astor termcolor protobuf keras-applications keras-preprocessing wrapt google-pasta
+
+This takes a long amount of time (about 24 minutes on my Nano).
+
+Now install the latest Nvidia built version of TensorFlow:
+
+    $ sudo -H pip3 install --pre --extra-index-url https://developer.download.nvidia.com/compute/redist/jp/v42 tensorflow-gpu
+
+Note that the `v42`, at the end of the URL used above, must match the Jetpack version that you're using. There doesn't seem to be a direct way of working out what version of Jetpack you're running, instead you can infer it from the cuDNN version which you can find like so:
+
+    $ cat /usr/include/cudnn.h | fgrep -m1 -A2 CUDNN_MAJOR
+    #define CUDNN_MAJOR 7
+    #define CUDNN_MINOR 3
+    #define CUDNN_PATCHLEVEL 1
+
+Now we know the cuDNN version is 7.3.1 we can search for that in the Jetpack [release notes](https://docs.nvidia.com/jetson/jetpack/release-notes/index.html) - and find that 7.3.1 was the version that shipped with Jetpack 4.2.
+
+You can check that everything has installed fine by entering `import tensorflow` using `python3` in REPL mode:
+
+    $ python3
+    >>> import tensorflow
+
+After a short pause you should see the `>>>` prompt again indicating that TensorFlow could be imported without any errors.
+
+### PyTorch
+
+[PyTorch](https://pytorch.org/) is a deep learning platform. They don't release their packages via [PyPI](https://pypi.org/) so for most systems you have to install it as outlined on their [getting started page](https://pytorch.org/get-started/locally/).
+
+However they don't release PyTorch wheels built for Jetson. The "from scratch" wiki page covers installing an old version of PyTorch that they've uploaded to Google Drive. However a better approach seems to be to use the packages Nvidia make available via the PyTorch for Jetson [forum topic](https://devtalk.nvidia.com/default/topic/1049071/jetson-nano/pytorch-for-jetson-nano/):
+
+    $ wget https://nvidia.box.com/shared/static/j2dn48btaxosqp0zremqqm8pjelriyvs.whl -O torch-1.1.0-cp36-cp36m-linux_aarch64.whl
+    $ sudo -H pip3 install torch-1.1.0-cp36-cp36m-linux_aarch64.whl
+
+Notes:
+
+* `.whl` wheel files specify an architecture, e.g. `x86_64` or `aarch64`, you can determine your architecture on Linux systems with the `arch` command. 
+* If building things like PyTorch from scratch (e.g. as in [this gist](https://gist.github.com/dusty-nv/ef2b372301c00c0a9d3203e42fd83426) from Nvidia developer Dustin Franklin) you need to know your CUDA version - you can find this in `/usr/local/cuda/version.txt`. The gist references the forum post mentioned above - so this really does seem to be the place to pickup PyTorch packages for Jetson.
+
+Now install [torchvision](https://pytorch.org/docs/stable/torchvision/index.html) (a package of "popular datasets, model architectures, and common image transformations for computer vision"):
+
+    $ sudo -H pip3 install -U torchvision
+
+### Traitlets
+
+[Traitlets](https://github.com/ipython/traitlets) add strong typing enforcement to Python object attributes, along with other features. I'm not sure how this is different to [mypy](https://github.com/python/mypy) which checks the type hints introduced by [PEP 484](https://www.python.org/dev/peps/pep-0484/) in Python 3.5.
+
+The "from scratch" wiki page says one should install Traitlets directly from GitHub in order to get the `unlink` method support. However the last commit involving `unlink` was [`b6c289e3`](https://github.com/ipython/traitlets/commit/b6c289e3) which has been in there since version 4.1.0 released in January 2016:
+
+    $ git tag --contains b6c289e3
+
+So if that's the only reason for installing from GitHub then it seems fine to install the latest version the normal way:
+
+    $ sudo -H pip3 install -U traitlets
+    $ pip show traitlets
+    Name: traitlets
+    Version: 4.3.2
+    ...
+
+Note: Traitlets is under active development, but their last [release](https://github.com/ipython/traitlets/releases) was in February 2017. They seems to be stuck on getting the next major version - [5.0](https://github.com/ipython/traitlets/milestone/5) - out the door. So there may be other more recent things that one might want to pull in than `unlink`.
+
+### Jupyter and JupyterLab
+
+[Jupyter](https://jupyter.org/) and [JupyterLab](https://jupyterlab.readthedocs.io/en/stable/) (the next-generation web-based user interface for Jupyter) provide the web based notebook interface that'll be used to work through the various Jetbot [examples](https://github.com/NVIDIA-AI-IOT/jetbot/tree/master/notebooks) later, such as Jetbot collision avoidance.
+
+    $ sudo apt install nodejs npm
+    $ sudo pip3 install jupyter jupyterlab
+
+This takes a few minutes. As does installing these lab extensions:
+
+    $ sudo jupyter labextension install @jupyter-widgets/jupyterlab-manager
+    $ sudo jupyter labextension install @jupyterlab/statusbar
+
+There are quite a lot of warnings when installing the extensions and the final output looks worryingly like a stack trace but seems to be fine.
+
+Generate a default Jupyter config (for more details see the [config file documentation](https://jupyter-notebook.readthedocs.io/en/stable/config.html)):
+
+    $ jupyter lab --generate-config
+
+Now setup a password for accessing the JupyterLab web interface from outside the Nano (as covered in the ["running a notebook server" documentation](https://jupyter-notebook.readthedocs.io/en/stable/public_server.html)):
+
+    $ jupyter notebook password
+
+Use `jetbot` as the password (as done in the "from scratch" wiki page) just to keep things simple.
+
+### Jetbot project
+
+We've already installed smbus so we don't need to do that:
+
+    $ apt list --installed | fgrep smbus
+
+Clone the Jetbot repository and get ready to install it:
+
+    $ git clone https://github.com/NVIDIA-AI-IOT/jetbot
+    $ cd jetbot
+    $ sudo apt install cmake
+
+There's only one C++ file (found in the [`ssd_tensorrt`](https://github.com/NVIDIA-AI-IOT/jetbot/tree/master/jetbot/ssd_tensorrt) subdirectory) that necessitates CMake.
+
+Now install:
+
+    $ sudo python3 setup.py install
+    $ pip3 show jetbot
+    Name: jetbot
+    Version: 0.3.0
+    Summary: An open-source robot based on NVIDIA Jetson Nano
+    ...
+
+Note: this pulls in a number of other libraries (specified in the `install_requires` section of the [`setup.py`](https://github.com/NVIDIA-AI-IOT/jetbot/blob/master/setup.py) file).
+
+Now install the Jetbot [systemd services](https://wiki.archlinux.org/index.php/systemd#Using_units) exactly as per the "from scratch" wiki page:
+
+    $ cd jetbot/utils
+    $ python3 create_stats_service.py
+    $ sudo mv jetbot_stats.service /etc/systemd/system/jetbot_stats.service
+    $ sudo systemctl enable jetbot_stats
+    $ sudo systemctl start jetbot_stats
+    $ python3 create_jupyter_service.py
+    $ sudo mv jetbot_jupyter.service /etc/systemd/system/jetbot_jupyter.service
+    $ sudo systemctl enable jetbot_jupyter
+    $ sudo systemctl start jetbot_jupyter
+
+All the scripts `create_stats_service.py` and `create_jupyter_service.py` do is write out the files `jetbot_stats.service` and `jetbot_jupyter.service`, substituting in the current username and directory to that the values `User` and `WorkingDirectory` are set appropriately in each file.
+
+The `jetbot_stats` service just starts the [`stats.py`](https://github.com/NVIDIA-AI-IOT/jetbot/blob/master/jetbot/apps/stats.py) script going at startup. This is just a slightly modified version of the original Adafruit [example script](https://github.com/adafruit/Adafruit_Python_SSD1306/blob/master/examples/stats.py) for outputting the IP address, CPU load and disk and memory usage on the [PiOLED](https://www.adafruit.com/product/3527).
+
+Note: the modified Jetbot version still determines the CPU load but doesn't output it, instead it outputs two IP addresses - the one associated with `eth0` and the one associated with `wlan0`.
+
+TODO: wire up the PiOLED to the Romi Jetbot setup.
+
+The `jetbot_jupyter` service just starts JupyterLab going at startup, listening on all interfaces, i.e. accessible externally.
+
+Finally copy the example notebooks into `~/Notebooks`:
+
+    $ cp -r ~/jetbot/notebooks ~/Notebooks
+
+There doesn't seem to be any particular reason for copying the files to `~/Notebooks`. When you access Jupyter via the web interface later you can see it just shows all the contents of the directory specified by `WorkingDirectory` in the service file `/etc/systemd/system/jetbot_jupyter.service`. So it doesn't look like there's anything special about `~/Notebooks` - I presume you could just as well navigate to the original files under `~/jetbot/jetbot/notebooks`.
+
+### Final steps
+
+I didn't setup a swap file as outlined in the "from scratch" wiki page - swapping to an SD card doesn't sound like a great idea. But perhaps will prove unavoidable.
+
+If I log in and out now I see:
+
+    *** System restart required ***
+
+So lets do that:
+
+    $ sudo reboot now
+
+Once the machine is restarted you can reach the JupyterLab web interface, running on the Nano, from your local machine with the URL <http://jetsonnano.local:8888/> and entering the password setup earlier, i.e. `jetbot`.
+
+TODO: add note elsewhere (when starting the Romi web interface for controlling the motors) about mDNS, i.e. names like jetsonnano.local, not working it using Chrome on Android - you have to use the raw IP address. It seems this the Android specific and will never be fixed - <https://bugs.chromium.org/p/chromium/issues/detail?id=405925>
+
+Now you're ready to get the example working with the Romi setup - <https://github.com/NVIDIA-AI-IOT/jetbot/wiki/examples>
