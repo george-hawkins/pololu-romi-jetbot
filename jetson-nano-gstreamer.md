@@ -87,7 +87,7 @@ One of the surprising and very important things is that `height` and `width` are
 
 It's worth capturing the same scene using the four modes above, i.e. 0, 1, 2 and 4, and then comparing the resulting images. The mode 4 image isn't simply the same as mode 0 but scaled to 1280x720 - it's actually captured a dramatically smaller area of the actual scene.
 
-You can see more clearly what's happening by looking a the FoV image for the V2 camera in the [Picamera camera modes documentaton](https://picamera.readthedocs.io/en/release-1.12/fov.html#camera-modes) - look for the second image of street scene (the first is for the old V1 camera).
+You can see more clearly what's happening by looking a the FoV image for the V2 camera in the [Picamera camera modes documentaton](https://picamera.readthedocs.io/en/release-1.12/fov.html#camera-modes) - look for the second image of a street scene (the first is for the old V1 camera).
 
 Note that the mode numbers used in the Raspberry Pi world _don't_ correspond to those used by `nvarguscamerasrc`.
 
@@ -100,7 +100,7 @@ So for `nvarguscamerasrc`:
 
 So mode 0 uses the full sensor while mode 2 uses only about a quarter of it.
 
-Taking four images, `mode-0.jpg`, `mode-1.jpg`, `mode-2.jpg` and `mode-4.jpg`, captured as above with `gst-launch-1.0` you can scale and add borders like so (with ImageMagick) to make it clearer how much of the sensor is being used in each mode:
+Taking four images, `mode-0.jpg`, `mode-1.jpg`, `mode-2.jpg` and `mode-4.jpg`, captured as above with `gst-launch-1.0`, you can scale and add borders like so (with ImageMagick) to make it clearer how much of the sensor is being used in each mode:
 
     $ convert mode-0.jpg -resize 50% cmp-mode-0.jpg
     $ convert mode-1.jpg -resize 50% mode-1-0.5.jpg
@@ -115,9 +115,11 @@ This produces a set of images, `cmp-mode-0.jpg`, `cmp-mode-1.jpg`, `cmp-mode-2.j
 |--------|--------|--------|--------|
 | ![mode 0](images/nvarguscamerasrc-modes/cmp-mode-0.jpg) | ![mode 1](images/nvarguscamerasrc-modes/cmp-mode-1.jpg) | ![mode 2](images/nvarguscamerasrc-modes/cmp-mode-2.jpg) | ![mode 4](images/nvarguscamerasrc-modes/cmp-mode-4.jpg) |
 
-For still images it's hard to see why you'd ever use anything other than mode 0. For video the FPS rate of the different modes becomes an issue - although here it's hard to see why one would ever use mode 2 it uses a smaller area of the sensor than mode 4 and can only achieve a FPS that's a quarter of that of mode 4. Mode 4 uses binning (2x2 pixels become 1 pixel in the output image) whereas mode 2 captures at native resolution - however even this doesn't weigh in mode 2's favor - binning is generally seen as advantageous as it reduces sensor noise (which becomes more apparent in low light situations).
+For still images it's hard to see why you'd ever use anything other than mode 0. For video the FPS rate of the different modes becomes an issue - although here it's hard to see why one would ever use mode 2 - it uses a smaller area of the sensor than mode 4 and can only achieve a FPS that's a quarter of that of mode 4. Mode 4 uses binning (2x2 pixels become 1 pixel in the output image) whereas mode 2 captures at native resolution - however even this doesn't weigh in mode 2's favor - binning is generally seen as advantageous as it reduces sensor noise (which becomes more apparent in low light situations).
 
-So when working through any machine vision projects and using image capture code written by someone else it's worth first starting up video streaming, as up above, in mode 0 and comparing what you see with what the image capture code you're using sees. The original author may have inadvertently selected parameters that result in a less than ideal mode, like mode 2, being selected.
+**Update:** when capturing still images using mode 2 and mode 4, those captured using mode 4 do look more grainy - so perhaps the 120 FPS or mode 4 (vs the 30 FPS of mode 2) comes into play even for still images and affects the amount of time the sensor is exposed to light (I would have imagined FPS was only a factor for video capture - but maybe still images are simply equivalent to a video consisting of a single frame).
+
+So when working through any machine vision projects and using image capture code written by someone else it's worth first starting up video streaming, as up above, in mode 0, and comparing what you see with what the image capture code you're using sees. The original author may have inadvertently selected parameters that result in a less than ideal mode, like mode 2, being selected.
 
 GStreamer basics
 ----------------
