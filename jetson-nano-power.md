@@ -165,6 +165,14 @@ Remember a bigger battery means more power but also more weight and a bigger siz
 
 For further suitable batteries from Digitec see these [3S ones](https://www.galaxus.ch/de/s5/producttype/rc-akku-679?tagIds=760&opt=v23-2002%3A11.1%7Cv23-230%3A1.4%7Cv23-230%3A1.45%7Cv23-230%3A1.6%7Cv23-230%3A1.65%7Cv23-230%3A1.7%7Cv23-230%3A1.8%7Cv23-230%3A1.9%7Cv23-230%3A1.95%7Cv23-230%3A2%7Cv23-230%3A2.1%7Cv23-230%3A2.2%7Cv23-230%3A2.4%7Cv23-230%3A2.3%7Cv23-230%3A2.5%7Cv23-230%3A2.7%7Cv23-230%3A3.1%7Cv23-230%3A3.2%7Cv23-230%3A2.8%7Cv23-230%3A3.3&pdo=23-19063%3A353839&so=5) and these [2S ones](https://www.galaxus.ch/de/s5/producttype/rc-akku-679?tagIds=760&opt=v23-2002%3A7.4%7Cv23-230%3A3%7Cv23-230%3A2.6%7Cv23-230%3A2.4%7Cv23-230%3A2.2&so=5&pdo=23-19063%3A353839).
 
+Voltage
+-------
+
+A 3S LiPo battery has a nominal voltage of 11.1V (for a 2S one, it's 7.4V) and at full charge it's around 12.6V. For this voltage you need either an SV (standard voltage, as opposed to LV - low voltage) [A-Star 32U4 robot controller](https://www.pololu.com/product/3118) or (if you don't need a builtin MCU) an [A4990 dual motor driver carrier](https://www.pololu.com/product/2137).
+
+They use a SV A-Star 32U4 robot controller in the [tutorial](https://www.pololu.com/blog/577/building-a-raspberry-pi-robot-with-the-a-star-32u4-robot-controller) for the board and pair it with [120:1 mini plastic gearmotors](https://www.pololu.com/product/1512). TODO: if I plugged a 3S battery into this setup the motor controller would be fine, but wouldn't I be providing way more than the 6V limit for the gearmotors? Perhaps an answer to [this question](https://forum.pololu.com/t/isnt-the-9v-of-the-romi-batteries-too-high-for-the-4-5v-gearmotors/17486) will provide clarity.
+However 12.6V also seems way to high 
+
 Monitoring voltage
 ------------------
 
