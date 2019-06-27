@@ -681,6 +681,108 @@ And you can set it back to unconstrained power consumption (`MAXN`) like so:
     NV Power Mode: MAXN
     0
 
+### Clocks
+
+There's also a script called `jetson_clocks` that's purported aim is to turn off the [DVFS](https://community.arm.com/developer/tools-software/oss-platforms/w/docs/245/cpufreq-dvfs) (dynamic voltage and frequency scaling) governor (by settings the minimum frequency of various clocks to their maximum frequency, along with a few other changes).
+
+Show current settings:
+
+    $ sudo jetson_clocks --show
+
+Set everything to max and show the result:
+
+    $ sudo jetson_clocks
+    $ sudo jetson_clocks --show
+
+You can store and restore settings with `--store` and `--restore`.
+
+Unlike `nvpmodel` changes, the changes made by `jetson_clocks` do _not_ survive rebooting.
+
+If the aim is to disable the DVFS governor (as claimed in the answer to this Nvidia [forum question](https://devtalk.nvidia.com/default/topic/1050897/jetson-nano/what-does-jetson_clocks-do-/)), one wonders why all this fiddling (see `/usr/bin/jetson_clocks` - it's a bash script) when one can just set the governor into performance mode:
+
+    $ cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors 
+    interactive conservative ondemand userspace powersave performance schedutil
+    $ for gov in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+    do
+        echo performance | sudo tee -a $gov
+    done
+
+**Update:** see next section on benchmarking.
+
+### Benchmarking
+
+Nvidia have a [page](https://developer.nvidia.com/embedded/jetson-nano-dl-inference-benchmarks) that covers benchmarking the Nano against the Raspberry Pi and other boards.
+
+On the related [instructions page](https://devtalk.nvidia.com/default/topic/1050377/jetson-nano/deep-learning-inference-benchmarking-instructions/) they show how to run SSD-Mobilenet-V2 and other benchmarks.
+
+If we have the NV power model set to `MAXN`, we get a total run time and an average iteration time as follows:
+
+* ~5m 32s / ~28.7ms when using the clocks with their default value (as they exist after reboot).
+* ~4m 41s / ~27.9ms with all the `scaling_governor` values set to `performance`.
+* ~3m 37s / ~26.1ms after `jetson_clocks` is run (and the system rebooted to reset the previous changes to the `scaling_governor` values).
+
+So while, for `jetson_clocks`, the impact on the iteration time is only 9% against the defaults for iteration time, it's 35% against the total runtime (and also noticeably better than the `performance` timings).
+
+**Update:** `performance` only governs the CPUs if you do the following, as well as setting the `scaling_governor` values to `performance`, then the timings are near identical to those for `jetson_clocks`:
+
+    $ cat /sys/devices/57000000.gpu/devfreq/57000000.gpu/available_frequencies
+    76800000 153600000 230400000 307200000 384000000 460800000 537600000 614400000 691200000 768000000 844800000 921600000
+    $ echo 921600000 | sudo tee -a /sys/devices/57000000.gpu/devfreq/57000000.gpu/min_freq
+
+I tried the Phoronix benchmark suite to take a look at CPU multi-core performance as per Sparkfun's [SBC benchmarks page](https://learn.sparkfun.com/tutorials/single-board-computer-benchmarks/all).
+
+The [Phoronix test suite](https://github.com/phoronix-test-suite/phoronix-test-suite) says it requires the PHP CLI and when you try to install the first test it complains about the lack of the PHP SimpleXML extension. You can find the appropriate package names with `apt-cache search` and install them
+
+    $ sudo apt-get install php7.2-cli php7.2-xml
+
+The clone the suite, find the latest tag and check that out:
+
+    git clone git@github.com:phoronix-test-suite/phoronix-test-suite.git
+    cd phoronix-test-suite
+    git tag
+    git checkout v8.8.1
+
+Then install the executables to a local directory rather than `/usr`:
+
+    mkdir ~/phoronix
+    ./install-sh ~/phoronix
+    PATH=~/phoronix/bin:$PATH
+
+Then install and run e.g. the `compress-7zip` benchmark:
+
+    $ phoronix-test-suite install pts/compress-7zip
+    $ phoronix-test-suite benchmark pts/compress-7zip
+
+Initially I tried `pts/himeno`, as suggested by the Sparkfun page as a good multi-core test, but it only used a single core.
+
+It seems that not all the tests are maintained, so I just one of the tests at random from the ones used in the fairly recent [review](https://www.phoronix.com/scan.php?page=article&item=linux-128-threads) of a 64 core server (I chose one of the test that showed near linear scaling with the number of cores).
+
+The `compress-7zip` bumped up and down generally keeping most of the cores occupied and sometimes hitting 100% usage of all cores (but also sometimes hitting noticeably less). See the next section for power usage.
+
+### Power consumption
+
+The following figures are gotten from hooking up and visually monitoring a simple [power monitor](https://portablepowersupplies.co.uk/home/premium-usb-dc-power-monitor) between the power supply and the USB power connctor. The voltage displayed was always around 5.2V.
+
+At idle (with no adjustments to clocks etc. but with the NV power model set to `MAXN` the Nano consumes about 0.23A.
+
+When streaming 3280x2464 video (as outline at the start of [`jetson-nano-gstreamer.md`](jetson-nano-gstreamer.md)) it consumes about 0.67A when simply ready to stream and 0.75 when streaming.
+
+When running the SSD-Mobilenet-V2 it consumes around 1.4A during the iterations phase.
+
+It didn't use noticeably more Amps when running SSD-Mobilenet-V2 after calling `jetson_clocks`, but the idle consumption goes up noticeably to 0.45A.
+
+When running `compress-7zip` it used around 1A max (with quite a lot of variability). So keeping the GPU occupied seems to use noticeably more power than keeping the CPU cores occupied.
+
+### Brownouts
+
+When running on batteries the system would shutdown when running the SSD-Mobilenet-V2 at the point when it starts iterating and the current usages jumps to 1.4A.
+
+But it didn't shutdown when running `compress-7zip` - so presumably too much current is somewhere between 1A and 1.4A.
+
+While running `compress-7zip` you could push things over the edge by starting up streaming (without actually connecting any client).
+
+So it doesn't seem as if the Romi regulator has much more than 1A leftover to power the SBC.
+
 Nano control continued
 ----------------------
 
@@ -857,6 +959,8 @@ So if that's the only reason for installing from GitHub then it seems fine to in
 
 Note: Traitlets is under active development, but their last [release](https://github.com/ipython/traitlets/releases) was in February 2017. They seems to be stuck on getting the next major version - [5.0](https://github.com/ipython/traitlets/milestone/5) - out the door. So there may be other more recent things that one might want to pull in than `unlink`.
 
+**Update:** actually various Jetbot classes [inherit](https://docs.python.org/3/tutorial/classes.html#inheritance) from the traitlet [configurable objects](https://traitlets.readthedocs.io/en/stable/config.html), e.g. [`Robot`](https://github.com/NVIDIA-AI-IOT/jetbot/blob/master/jetbot/robot.py) inherits from `SingletonConfigurable`.
+
 ### Jupyter and JupyterLab
 
 [Jupyter](https://jupyter.org/) and [JupyterLab](https://jupyterlab.readthedocs.io/en/stable/) (the next-generation web-based user interface for Jupyter) provide the web based notebook interface that'll be used to work through the various Jetbot [examples](https://github.com/NVIDIA-AI-IOT/jetbot/tree/master/notebooks) later, such as Jetbot collision avoidance.
@@ -926,6 +1030,12 @@ Note: the modified Jetbot version still determines the CPU load but doesn't outp
 
 TODO: wire up the PiOLED to the Romi Jetbot setup.
 
+If you don't have the PiOLED wired up then don't enabled `jetbot_stats` - if there's no I2C device at the expected address the `jetbot_stats` script will repeatedly fail and be restarted by systemd, with surprisingly high CPU usage - enough to have a noticeable affect on power consumption. If you have started and enabled it then you can see the failures and disable and stop if like so:
+
+    $ journalctl -u jetbot_stats
+    $ sudo systemctl disable jetbot_stats
+    $ sudo systemctl stop jetbot_stats
+
 The `jetbot_jupyter` service just starts JupyterLab going at startup, listening on all interfaces, i.e. accessible externally.
 
 Finally copy the example notebooks into `~/Notebooks`:
@@ -951,3 +1061,14 @@ Once the machine is restarted you can reach the JupyterLab web interface, runnin
 TODO: add note elsewhere (when starting the Romi web interface for controlling the motors) about mDNS, i.e. names like jetsonnano.local, not working it using Chrome on Android - you have to use the raw IP address. It seems this the Android specific and will never be fixed - <https://bugs.chromium.org/p/chromium/issues/detail?id=405925>
 
 Now you're ready to get the example working with the Romi setup - <https://github.com/NVIDIA-AI-IOT/jetbot/wiki/examples>
+
+TODO: the jetbot repo contains an app - [`wander.py`](https://github.com/NVIDIA-AI-IOT/jetbot/blob/master/jetbot/apps/wander.py) - and a notebook - [`road_following`](https://github.com/NVIDIA-AI-IOT/jetbot/tree/master/notebooks/road_following) - that seem to be orphaned, they're not mentioned in either the repo itself or the wiki.
+
+Notebooks
+---------
+
+On moving from one notebook to the next it's necessary to go to Kernel / Shutdown All Kernels... and then go to Kernel / Restart Kernel... for the notebook that you've moved to.
+
+When you take snapshots using the second noteboot you can see the results in the left-hand-side panel - there'll you'll see the directory "snapshots". You can also find this directory on your Nano under `~/Notebooks/teleoperation/snapshots`.
+
+
