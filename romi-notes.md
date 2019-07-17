@@ -13,7 +13,7 @@ We're going to go through the build guide but use a Jetson Nano rather than a Pi
 32U4 control board
 ------------------
 
-The most important componet is the 32U4 control board - read through its [user guide](https://www.pololu.com/docs/0J69/all). Despite being quite long, its important to understand how it works and what its capable of.
+The most important component is the 32U4 control board - read through its [user guide](https://www.pololu.com/docs/0J69/all). Despite being quite long, its important to understand how it works and what its capable of.
 
 The control board has its own MCU that will act as a slave to the Nano, taking care of controlling the motors without the Nano having to worry about the mechanics of what's going it - it just has to issue high level commands.
 
@@ -565,6 +565,29 @@ That's all the soldering finished.
 
 14. Press the power button - if all goes well the blue power LED goes on, the buzzer beeps (this presumably depends on the current sketch?) and the Pi powers up.
 
+**Update:**
+
+15. I later soldered on the male header for the LCD. There's also a corresponding female header supplied - normally this would be soldered to the control board and the male header would be soldered to the Pololu [8x2 character LCD](https://www.pololu.com/product/356). However I wanted to connect to the PiOLED via jumper wires and doing this using the male header is more low profile (female jumper connectors on top of the male header pins vs male jumper connectors on top of the higher female header).
+
+16. I switched from using using VREG via the 2x40 header to soldering the power wires for the Nano onto the 5V pins above and to the left of the boards micro-USB connector.
+
+**Important:** this is the only uncorrectable mistake I made - some people suggest when soldering a wire to a PCB to tin the PCB hole first, i.e. fill it with a small amount of solder, and then take the tinned wire end, remelt the solder in the hole and push the wire through the liquid solder. This worked well for the power wire but not for the ground wire - once I'd filled the ground hole with solder I found it impossible to remelt it such that I could push the ground wire through. I tried repeatedly and all that seemed to happen was that the solder at the surface melted but I couldn't push the wire through. This is why in the photo you don't see the ground wire soldered in directly below the power wire. I guess the ground holes are connected to a large ground plain that draws away the heat.
+
+If I was doing this step again I would simply tin the wires, leave the holes as they are, push the wires through and tack them in place (as I did with the male header) and then solder the wires in place on the other side of the board like the wires of any normal through-hole component.
+
+**Update 2:**
+
+The LCD header on the Romi control boards does **not** include I2C. So instead:
+
+* I removed the female header from the PiOLED. It wasn't necessary to desolder it - it was easy enough to cut the header off using [diagonal cutters](https://www.adafruit.com/product/152) - pushing it in between header and PCB (the plastic "sheath" doesn't hold the female pins so strongly, it eases up from them without problem).
+* Then I soldered in two rows of 3 pins on stackable header.
+
+Note: if you look at stackable headers on a proper board you'll see the plastic female half on one side of the board and then on the other side of the board, where the male pins stick out, you'll see the pins have a narrow plastic base, like normal male header. So I pulled the this narrow plastic base off some male header with the intention of pushing this onto the pins after I'd soldered the stackable header in place. However it's clear this won't work with normal soldering - the solder joints take up the space of the plastic bases. So crop these plastic bases out of the photos.
+
+In practise the OLED is somewhat less readable than it appears in the Adafruit product photos.
+
+`stats.py` could probably be seriously optimized - it's continously spawning processes to gather the information it display and consumes a noticeable amount of CPU - taking up to 6% at times (of the total, i.e. at peak it's consuming up to a quarter of one core).
+
 Testing
 -------
 
@@ -715,6 +738,11 @@ Nvidia have a [page](https://developer.nvidia.com/embedded/jetson-nano-dl-infere
 
 On the related [instructions page](https://devtalk.nvidia.com/default/topic/1050377/jetson-nano/deep-learning-inference-benchmarking-instructions/) they show how to run SSD-Mobilenet-V2 and other benchmarks.
 
+Once installed the SSD-Mobilenet-V2 benchmark can be run like so:
+
+    $ cd /usr/src/tensorrt/bin
+    $ sudo ./sample_uff_ssd_rect
+
 If we have the NV power model set to `MAXN`, we get a total run time and an average iteration time as follows:
 
 * ~5m 32s / ~28.7ms when using the clocks with their default value (as they exist after reboot).
@@ -759,6 +787,65 @@ It seems that not all the tests are maintained, so I just one of the tests at ra
 
 The `compress-7zip` bumped up and down generally keeping most of the cores occupied and sometimes hitting 100% usage of all cores (but also sometimes hitting noticeably less). See the next section for power usage.
 
+Note: I used [this script](https://askubuntu.com/a/450136/734204) from SO to monitor the total CPU usage, i.e. across all cores. It proved easier to view than `htop` when it came to monitoring if `himeno` or `compress-7zip` were really using all cores.
+
+**Update:** if the goal is simply to maximize power consumption then something like [stress-ng](https://wiki.ubuntu.com/Kernel/Reference/stress-ng) would have made more sense for the CPU (and it can be installed directly using `apt`) and something like [gpu-burn](https://github.com/wilicc/gpu-burn) for a CUDA capable GPU. Note: various people have made minor improvements to gpu-burn that have not been merged to the original - see [spaulaus](https://github.com/spaulaus/gpu-burn/commits/master), [madisongh](https://github.com/madisongh/gpu-burn/commits/master), [Fladrif](https://github.com/Fladrif/gpu-burn/commits/feature/no-cuda-failure), [willfurnass](https://github.com/willfurnass/gpu-burn/commits/master), [yotabits](https://github.com/yotabits/gpu-burn/commits/master), [VanAndelInstitute](https://github.com/VanAndelInstitute/gpu-burn/commits/master), [nanoant](https://github.com/nanoant/gpu-burn/commits/windows-vs2015) and [davidstack](https://github.com/davidstack/gpu-burn/commits/master). Most of these look uninteresting but perhaps there's something in there among the various additional commits.
+
+### Monitoring
+
+Normally you'd use `sensors` to monitor e.g. CPU temperatures and `nvidia-smi` to monitor GPU usage. However according to [this post](https://devtalk.nvidia.com/default/topic/1023581/jetson-tx1/nvidia-smi-command-not-found-i-m-obviously-missing-something/) `nvidia-smi` isn't available for Tegra (I looked and couldn't find it) and `sensors` returns very little information on my Nano:
+
+    $ sudo apt install lm-sensors
+    $ sudo sensors
+    thermal-fan-est-virtual-0
+    Adapter: Virtual device
+    temp1:        +39.0 C  
+
+    iwlwifi-virtual-0
+    Adapter: Virtual device
+    temp1:        +39.0 C
+
+Tegrastats also produces very little information:
+
+    $ sudo tegrastats
+    RAM 888/3965MB (lfb 470x4MB) IRAM 0/252kB(lfb 252kB) CPU [0%@921,0%@921,off,off] EMC_FREQ 0%@1600 GR3D_FREQ 0%@76 APE 25 PLL@36.5C CPU@39C iwlwifi@38C PMIC@100C GPU@38.5C AO@44C thermal@39C POM_5V_IN 1661/1661 POM_5V_GPU 0/0 POM_5V_CPU 165/165
+
+`GR3D` is the GPU engine.
+
+For monitoring the GPU this doesn't seem much more useful than:
+
+    $ cat /sys/devices/57000000.gpu/load
+    0
+
+From searching the Nvidia forums, this seems to be about it as far as the standard tools go. However many posters recommend [jetson-stats](https://github.com/rbonghi/jetson_stats) - which I found simple to install and useful:
+
+    $ sudo -H pip install jetson-stats
+    $ sudo jtop
+
+This also installs `jetson-release` which shows useful information about the system (including the Jetpack version - which as noted elsewhere isn't readily retrievable):
+
+    $ jetson-release 
+     - NVIDIA Jetson NANO/TX1
+       * Jetpack 4.2 [L4T 32.1.0]
+       * CUDA GPU architecture 5.3
+     - Libraries:
+       * CUDA 10.0.166
+       * cuDNN 7.3.1.28-1+cuda10.0
+       * TensorRT 5.0.6.3-1+cuda10.0
+       * Visionworks 1.6.0.500n
+       * OpenCV 3.3.1 compiled CUDA: NO
+     - Jetson Performance: inactive
+
+The standard tools `htop` and `iotop` work as expected:
+
+    $ sudo apt install iotop
+    $ sudo iotop
+
+    $ sudo apt install htop
+    $ htop
+
+For tools that just output current values and then exit you can use [`watch`](http://manpages.ubuntu.com/manpages/trusty/man1/watch.1.html) to run the tool periodically and display the updated value.
+
 ### Power consumption
 
 The following figures are gotten from hooking up and visually monitoring a simple [power monitor](https://portablepowersupplies.co.uk/home/premium-usb-dc-power-monitor) between the power supply and the USB power connctor. The voltage displayed was always around 5.2V.
@@ -782,6 +869,38 @@ But it didn't shutdown when running `compress-7zip` - so presumably too much cur
 While running `compress-7zip` you could push things over the edge by starting up streaming (without actually connecting any client).
 
 So it doesn't seem as if the Romi regulator has much more than 1A leftover to power the SBC.
+
+### Switching between low and high power mode
+
+So unfortunately it looks like we'll need to run the Romi setup in 5W mode when it's running on battery. So to be able to switch between low and high power modes we first need to record the standard clock settings.
+
+First reboot the Nano to reset any changes made to the clocks:
+
+    $ sudo reboot now
+
+Then login again and record the default clock settings:
+
+    $ sudo jetson_clocks --store l4t_dfs-defaults.conf
+
+When we're doing something GPU intensive then the Nano should be powered using a main power supply, rather than batteries, and switched into high power mode like so:
+
+    $ sudo nvpmodel -m 0
+    $ sudo nvpmodel -q
+    $ sudo jetson_clocks
+
+And when the Romi is running on battery power it needs to be switched into 5W low power mode like so:
+
+    $ sudo nvpmodel -m 1
+    $ sudo nvpmodel -q
+    $ sudo jetson_clocks --restore l4t_dfs.conf
+
+As noted the `nvpmodel` changes do survive reboots but the clock changes do not - so you'll probably never need to actively switch the clocks into default mode as you'll presumably always switch to battery power only after first shutting down the system (but you will need to actively switch the clocks into high power mode every time you need this after a restart).
+
+### Low power breakouts
+
+Does switch to the low power 5W mode end brownout issues? Unfortunately not. In 5W mode I could now run the SSD-Mobilenet-V2 to completion on batteries without issue (with an iteration time of 40ms). I could also run `compress-7zip` and even start up streaming (which previously pushed things over the edge), however if I actually started a remote client, to view the streamed data, this did push things over the edge and the system shut down.
+
+TODO: see if this is still the case if you solder in the power wires before the regulator, i.e. to 5V rather than VREG.
 
 Nano control continued
 ----------------------
@@ -1071,4 +1190,46 @@ On moving from one notebook to the next it's necessary to go to Kernel / Shutdow
 
 When you take snapshots using the second noteboot you can see the results in the left-hand-side panel - there'll you'll see the directory "snapshots". You can also find this directory on your Nano under `~/Notebooks/teleoperation/snapshots`.
 
+Controllers
+-----------
+
+A [gamepad](https://en.wikipedia.org/wiki/Gamepad) is needed for the [teleoperation example](https://github.com/NVIDIA-AI-IOT/jetbot/wiki/examples#example-2---teleoperation).
+
+You can test if a particular gamepad will be recognized using <https://html5gamepad.com/>
+
+I visited the site using Chrome, which worked perfectly. According to the [browser support](https://html5gamepad.com/browser-support) page other browsers should work well too - Firefox, Safari and Opera and Microsoft Edge are all listed there, however the latest versions of Internet Explorer are not, i.e. 11 and 10.
+
+If you don't have a gamepad then the wired [Logitech F310](https://www.logitechg.com/en-us/products/gamepads/f310-gamepad.html) is about the cheapest name brand one you can buy. Obviously there are cheaper no name models, like [this one](https://www.banggood.com/2_4GHz-Wireless-Game-Controller-Gamepad-Joystick-For-Android-TV-Box-PC-p-1143410.html) from Banggood, but I've no idea if they'll work with any particular setup.
+
+On my Linux system the F310 in fact worked better than any other controller I tried. It plugged in and worked without any extra steps and the Html5gamepad site recognized all its buttons as expected.
+
+Note: the F310 does not support vibration.
+
+I also tried an Nvidia Shield controller and a PS4 controller - the Shield controller didn't work at all under any circumstances and the PS4 didn't work in wireless mode but did work when connected via USB (however the Html5gamepad site did not recognise some of its buttons). I've read that things have improved in the latest versions of Ubuntu so your experience may differ.
+
+I also had fairly similar results using a Mac. Again the F310 worked best (I suspect as a 3rd party controller Logitech have put a bit more effort into ensuring their controller works well with different systems). Unlike on Linux I did have to install the [Logitech gaming software](https://support.logi.com/hc/en-us/articles/360025298053) first before it would work.
+
+TODO: buying a gamepad simply to use it for a few minutes with the teleoperation example is a bit excessive. Write a Python class that can replace the `ipywidgets.widgets.Controller` class, exposing the cursor keys as `axes[1]` and `axes[3]` so it can plug straight into the `left_link` and `right_link` logic without any modification. Even cooler would be to have the cursor keys controlling velocity and rotation and translate these into left and right values such that you got more intuitive control than the tank-like control that you get with a real controller.
+
+Performance
+-----------
+
+TODO: see what follow-up there is to my performance post - <https://devtalk.nvidia.com/default/topic/1056854/jetson-nano/terrible-performance-when-gpu-governor-set-to-performance-/>
+
+So as demonstrated above the Romi cannot provide enough current for MAXN mode for the Nano.
+
+So when running on battery you need to set things to 5W mode:
+
+    $ sudo nvpmodel -m 1
+    $ sudo nvpmodel -q
+    NV Power Mode: 5W
+    1
+    
+And when its running via USB power it can be set to run at full power:
+
+    $ sudo nvpmodel -m 0
+    $ sudo nvpmodel -q
+    NV Power Mode: MAXN
+    0
+    $ sudo jetson_clocks
 
