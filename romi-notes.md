@@ -579,14 +579,21 @@ If I was doing this step again I would simply tin the wires, leave the holes as 
 
 The LCD header on the Romi control boards does **not** include I2C. So instead:
 
-* I removed the female header from the PiOLED. It wasn't necessary to desolder it - it was easy enough to cut the header off using [diagonal cutters](https://www.adafruit.com/product/152) - pushing it in between header and PCB (the plastic "sheath" doesn't hold the female pins so strongly, it eases up from them without problem).
+* I removed the female header from the PiOLED. It wasn't necessary to desolder it - it was easy enough to cut the header off using [diagonal cutters](https://www.adafruit.com/product/152) - pushing it in between header and PCB (the plastic housing doesn't hold the female terminals so strongly and eases up from them without problem).
 * Then I soldered in two rows of 3 pins on stackable header.
 
 Note: if you look at stackable headers on a proper board you'll see the plastic female half on one side of the board and then on the other side of the board, where the male pins stick out, you'll see the pins have a narrow plastic base, like normal male header. So I pulled the this narrow plastic base off some male header with the intention of pushing this onto the pins after I'd soldered the stackable header in place. However it's clear this won't work with normal soldering - the solder joints take up the space of the plastic bases. So crop these plastic bases out of the photos.
 
+    $ cd ~/jetbot/jetbot/apps
+    $ python3 stats.py
+
 In practise the OLED is somewhat less readable than it appears in the Adafruit product photos.
 
 `stats.py` could probably be seriously optimized - it's continously spawning processes to gather the information it display and consumes a noticeable amount of CPU - taking up to 6% at times (of the total, i.e. at peak it's consuming up to a quarter of one core).
+
+Note: for whatever reason `stats.py` takes several seconds before it starts displaying anything on the OLED - initially nothing happens and it looks like it's not working.
+
+Note: intially I tried using the 2x3 stackable header from the [Adafruit stackable header pack](https://www.adafruit.com/product/85) but it was terrible quality (it was bought 5 years ago, so maybe they've changed supplier since) - the pins where too thin for female jumper wire to really grip. In the end I used branded header bought from Digikey - [SAM1198-50-ND](https://www.digikey.ch/products/de?keywords=SAM1198-50-ND).
 
 Testing
 -------
