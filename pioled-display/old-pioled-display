@@ -1,0 +1,23 @@
+#!/usr/bin/env python3
+
+import sys
+
+from PIL import Image
+from Adafruit_SSD1306 import SSD1306_128_32
+
+if len(sys.argv) != 2:
+    print(f"Usage: {sys.argv[0]} image-file", file=sys.stderr)
+    sys.exit(1)
+
+filename = sys.argv[1]
+
+# Load the image - `convert("1")` ensures the bitmap is in the one format that the display can handle.
+image = Image.open(filename).convert("1")
+
+# 128x32 OLED display with I2C.
+disp = SSD1306_128_32(rst=None, i2c_bus=1, gpio=1) # setting gpio to 1 is hack to avoid platform detection
+
+# Initialize the display, write the image to display buffer and then write it to the actual display.
+disp.begin()
+disp.image(image)
+disp.display()

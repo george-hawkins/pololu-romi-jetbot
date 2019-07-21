@@ -1,0 +1,31 @@
+#!/bin/bash -e
+
+fail() {
+    echo $* 1>&2
+    exit 1
+}
+
+if [ $# -lt 1 ]
+then
+    fail "Usage: $0 message ..."
+fi
+
+message=$*
+
+# Ubuntu-Condensed and Ubuntu-Medium are nice alternatives.
+font='Liberation-Sans-Narrow-Bold'
+
+if ! convert -list font | egrep -q "Font: $font$"
+then
+    fail "Error: ImageMagick can't find font $font"
+fi
+
+tmp=$(mktemp --suffix=.bmp)
+
+# There are many different ways to convert to monochrome. `+dither -monochrome` seems to give the best results.
+# `+dither` disables the default dithering (which works well for images but not for text).
+# Another approach, that sometimes produces less blocky results, involves two `convert` calls like so:
+# `convert ... -depth 1 png:- | convert - -monochrome $tmp`
+convert -negate -font $font -size 128x32 -gravity center "label:$message" +dither -monochrome $tmp
+
+echo $tmp
