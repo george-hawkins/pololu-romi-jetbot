@@ -13,7 +13,7 @@ We're going to go through the build guide but use a Jetson Nano rather than a Pi
 32U4 control board
 ------------------
 
-The most important componet is the 32U4 control board - read through its [user guide](https://www.pololu.com/docs/0J69/all). Despite being quite long, its important to understand how it works and what its capable of.
+The most important component is the 32U4 control board - read through its [user guide](https://www.pololu.com/docs/0J69/all). Despite being quite long, its important to understand how it works and what its capable of.
 
 The control board has its own MCU that will act as a slave to the Nano, taking care of controlling the motors without the Nano having to worry about the mechanics of what's going it - it just has to issue high level commands.
 
@@ -39,9 +39,11 @@ There's a voltage divider that allows you to monitor the voltage decreasing as t
 
 Four pins are used to read the data from the quadrature encoders - the encoders provide a feedback loop, you can tell the motors to turn faster but how much the wheels actually turn is dependent on various factors (they may not turn at all if the robot is stuck) - the encoders report the actual turning.
 
-The board has an LSM9DS0 - a 9-DOF accelerometer, gyro and magentometer. It's connected to the boards I2C bus. Instead of reading the LSM9DS0 datasheet, as suggested, it's easier to work with it using CircuitPython as covered in this [Adafruit guide](https://learn.adafruit.com/adafruit-lsm9ds0-accelerometer-gyro-magnetometer-9-dof-breakouts?view=all) (where it corresponds to the Flora, i.e. I2C only).
+The board has an LSM6DS33 - a 6-DOF accelerometer and gyro. It's connected to the boards I2C bus. Pololu suggest reading the LSM6DS33 datasheet but I'm not sure how much is gained by that - their product page for their separate [LSM6DS33 breakout](https://www.pololu.com/product/2736) probably contains as much information as most people would want (note that on the Romi control board only I2C is supported whearas the breakout also supports SPI).
 
-The LSM9DS0 has the I2C slave 7-bit address 1101011.
+The LSM6DS33 has the I2C slave address 1101011, i.e. 0x6B. This address is also used by the 9-DOF LSM9DS0 (see the Adafruit [table of I2C addresses](https://learn.adafruit.com/i2c-addresses/the-list)) which also features a magnotometer. A magnotometer would have been a nice addition for dead-reakoning but perhaps it would have been useless on the control board (as a result of being overwhelmed by electrical noise from the motors).
+
+Note: one could use e.g. an [LSM303D](https://www.pololu.com/product/2127) as a separate compass and raise it up on a mast to escape electrical noise (as is common on drones where this is generally done with a combined GPS and compass). There are no end of options when it comes to compasses combined with other sensors, so this would require more investigation for a given setup - the LSM303D is just mentioned here as an _example_.
 
 The slider switch should *always* be left in the off position - otherwise it disrupts the proper functioning of the push button power switch. The slider only comes into proper use if you cut the _Btn Jmp_ jumper and use it instead of the push button power switch. This looks like a potential source of confusion!
 
@@ -50,6 +52,14 @@ TODO: it's possible to get "your robot to turn off its own power" - see if this 
 The power regulator has a maximum continuous output current of a little under 2.5A at 5V when the input voltage is 7.2V (as it would be from 6 NiMH AA batteries). See the regulator [product page](https://www.pololu.com/product/2858) for more details, including graphs covering efficiency and current output.
 
 TODO: try powering the Pi seperatly and see how much current the MCU, encoders, motor drivers and motors draw - the motors have a stall current of 1.25A each and apparently you should run such motors at around 20% to 30% of this (see [here](https://www.pololu.com/product/1520/faqs). So 25% of the two motors would be 1A which doesn't leave much for the Nano.
+
+**Update:** according to this [post](https://forum.pololu.com/t/rpi5v-on-romi-control-board-maxes-out-at-500ma/17339/3?u=ghawkins), from Kevin at Pololu, "the motors are not powered from the regulated voltage, so the current they draw doesn't reduce what's available from VREG" - this seems to contradict the control board user guide that says "VREG is generally used to supply logic power for the ATmega32U4, **motor drivers**, and encoders. The rest of the regulator's achievable output current [...] can be used to power other devices [...]. Under typical conditions, up to 2 A of current is available from the VREG output."
+
+**Update 2:** these two statements aren't in contradiction - the important bit in the second quote is "**logic** power" - if you look at the [product page](https://www.pololu.com/product/2990) for the DRV8838 breakout (the DRV8838 is the same motor driver as used in the Romi control board) you'll see that it takes two voltages, VIN for the motor and VCC for the control interface. So VCC corresponds to 5V (the orange pins in the power distribution section of the Romi control board [pinout PDF](https://www.pololu.com/file/0J1261/romi-32u4-control-board-pinout-power.pdf). If we look at the [schematic PDF](https://www.pololu.com/file/0J1213/motor-driver-and-power-distribution-board-for-romi-chassis-schematic.pdf) for the motor driver and power distribution board (which is simpler to read than the one for the full control board as it doesn't feature the MCU), we see that VM (what we just called VIN for DRV8838 breakout) comes via VSW. If we then look at the corresponding product page (or that for the full control board or its pinout PDF) we see that VSW we see that "VSW is the battery voltage after reverse protection and the power switch circuit. By default, it provides power to the motors (VM) through the on-board motor drivers."
+
+TODO: supplying battery voltage directly to the motors seems a little strange. The nominal voltage for 6 alkaline AA batteries is 9V and for 7.2V for rechargeable batteries (my Varta rechargeable batteries total 8.3V when _fully_ charged). This seems quite far outside the intended operational voltage of 4.5V shown on the [product page](https://www.pololu.com/product/1520) for the gearmotors that are supplied with the Romi chassis kit. I asked [a question](https://forum.pololu.com/t/isnt-the-9v-of-the-romi-batteries-too-high-for-the-4-5v-gearmotors/17486) about this on the Pololu forums.
+
+Aside: in looking into the voltage if NiMH I was interested to find that "the higher the capacity, the worse the shelf life" and not just the shelf life, but also the number of charge cycles. A 2700mAh NiMH battery is at 0% charge after a year and may not survive more the 300 charge cycles, whereas a standard 2100mAh is still at 85% charge after a year and can survive 2100 charge cycles. I'd wondered previously if it might be better to buy the more expensive higher capacity batteries - but from this data it looks like the standard 2100mAh ones are cheaper and better unless you really require the extra running time provided by the higher capacity ones. These details come from Michael Bluejay's [battery guide](https://michaelbluejay.com/batteries/rechargeable.html).
 
 2A is the maximum the Nano can draw via the USB power connector but it can apparently consume a lot more if powered via the the barrel jack - it'd be interesting to monitor the Nano's current draw, does it max out at 2A (implying it might consume more if it were available)?
 
@@ -199,9 +209,9 @@ There are some pretty interesting examples here so it's worth looking thru them 
 
 E.g. try out the InertialSensors example, it depends on the LSM6 library - so go back to Manage Libraries... as above and this time search for "lsm6". There are several LSM6 libraries - select and install the one from Pololu.
 
-Note: this library is really for the LSD6DS33, whereas the control board has a LSM9DS0 - presumably they have a compatible interface. If you search you'll see libraries for the LSM9DS0 from Adafruit, Sparkfun and others.
-
 Once the library is installed you can open and upload the InertialSensors, then go to Tools / Serial Monitor and see the output from the sketch (assuming "9600 baud" is selected in the monitor). If you pick up and turn the board in every direction you'll see the output values changing to reflect this.
+
+The Pololu [LSM6 Arduino library](https://github.com/pololu/lsm6-arduino) just outputs raw 16-bit values read directly from the sensor - the comment at the start of the [InertialSensors example code](https://github.com/pololu/lsm6-arduino/blob/master/examples/Serial/Serial.ino) notes how you can covert these into something more meaningful. This kind of unit conversion is discussed in the [demo sketch section](https://learn.adafruit.com/adafruit-lsm9ds0-accelerometer-gyro-magnetometer-9-dof-breakouts?view=all#load-demo-sketch-4-11) of the Adafruit tutorial for the LSM9DS0 where they introduce their [sensor driver](https://github.com/adafruit/Adafruit_Sensor) for doing this. The LSM9DS0 is basically an LSM6DS33 with a magnotometer (Adafruit have actually discontinued their LSM9DS0 breakout and replaced it with a cheaper and somwhat less accurate [LSM9DS1 one](https://www.adafruit.com/product/3387)).
 
 You can find full documentation for the classes and functions of the Romi32U4 library [here](http://pololu.github.io/romi-32u4-arduino-library/).
 
@@ -281,8 +291,8 @@ Note that `1` is the bus number taken from `i2c-1` above - it isn't a given that
 
 So we see two addresses:
 
-* 0x6b is the LSM9DS0 on the control board (see `0b1101011`, i.e. 0x6b in binary, being used in [`LSM6.cpp`](https://github.com/pololu/lsm6-arduino/blob/master/LSM6.cpp).
-* 0x14 is the MCU on the control board (see `20`, i.e. 0x14 in decimal, being used in [`pi/a_star.py`](https://github.com/pololu/pololu-rpi-slave-arduino-library/blob/master/pi/a_star.py)).
+* 0x6b is the LSM6DS33 on the control board (see `0b1101011`, i.e. 0x6b, being used in [`LSM6.cpp`](https://github.com/pololu/lsm6-arduino/blob/master/LSM6.cpp).
+* 0x14 is the MCU on the control board (see `20`, i.e. 0x14, being used in [`pi/a_star.py`](https://github.com/pololu/pololu-rpi-slave-arduino-library/blob/master/pi/a_star.py)).
 
 Now on the Nano
 ---------------
@@ -545,6 +555,8 @@ That's all the soldering finished.
 
 10. Now install the ball caster in the rear socket (the one that's firmly part of the chassis, as opposed to the front one which is supported by a flexible arm).
 
+**Update:** a front caster is also needed - after trying it out without one I found that the whole setup really is quite heavy and when it comes to a sudden halt it would tip forward onto the front edge with a bang. The front socket is only attached to the overall chassis by a thin arm - this looks like the least robust bit of the thing, so be careful installing the front caster (though if you mess things up a replacement [chassis base plate](https://www.pololu.com/product/3516) does just cost US$8). Without a rubber band on the top side of the socket (see the [assembly guide](https://www.pololu.com/docs/0J68/all#4) for more details) it's too flexible (on sudden stops the top of the socket ends up banging off the bottom of the control board). I used a 22x3mm nitrile o-ring (you should be able to pick them up in a hardware store) - it was quite hard to get on but proves to be the perfect size (though at 3mm it's a little too fat - 2.5mm would be better).
+
 11. Put the tires on the wheels and attach the wheels to the motor shafts.
 
 12. Load the battery compartment.
@@ -552,6 +564,36 @@ That's all the soldering finished.
 13. Attach it to a Pi.
 
 14. Press the power button - if all goes well the blue power LED goes on, the buzzer beeps (this presumably depends on the current sketch?) and the Pi powers up.
+
+**Update:**
+
+15. I later soldered on the male header for the LCD. There's also a corresponding female header supplied - normally this would be soldered to the control board and the male header would be soldered to the Pololu [8x2 character LCD](https://www.pololu.com/product/356). However I wanted to connect to the PiOLED via jumper wires and doing this using the male header is more low profile (female jumper connectors on top of the male header pins vs male jumper connectors on top of the higher female header).
+
+16. I switched from using using VREG via the 2x40 header to soldering the power wires for the Nano onto the 5V pins above and to the left of the boards micro-USB connector.
+
+**Important:** this is the only uncorrectable mistake I made - some people suggest when soldering a wire to a PCB to tin the PCB hole first, i.e. fill it with a small amount of solder, and then take the tinned wire end, remelt the solder in the hole and push the wire through the liquid solder. This worked well for the power wire but not for the ground wire - once I'd filled the ground hole with solder I found it impossible to remelt it such that I could push the ground wire through. I tried repeatedly and all that seemed to happen was that the solder at the surface melted but I couldn't push the wire through. This is why in the photo you don't see the ground wire soldered in directly below the power wire. I guess the ground holes are connected to a large ground plain that draws away the heat.
+
+If I was doing this step again I would simply tin the wires, leave the holes as they are, push the wires through and tack them in place (as I did with the male header) and then solder the wires in place on the other side of the board like the wires of any normal through-hole component.
+
+**Update 2:**
+
+The LCD header on the Romi control boards does **not** include I2C. So instead:
+
+* I removed the female header from the PiOLED. It wasn't necessary to desolder it - it was easy enough to cut the header off using [diagonal cutters](https://www.adafruit.com/product/152) - pushing it in between header and PCB (the plastic housing doesn't hold the female terminals so strongly and eases up from them without problem).
+* Then I soldered in two rows of 3 pins on stackable header.
+
+Note: if you look at stackable headers on a proper board you'll see the plastic female half on one side of the board and then on the other side of the board, where the male pins stick out, you'll see the pins have a narrow plastic base, like normal male header. So I pulled the this narrow plastic base off some male header with the intention of pushing this onto the pins after I'd soldered the stackable header in place. However it's clear this won't work with normal soldering - the solder joints take up the space of the plastic bases. So crop these plastic bases out of the photos.
+
+    $ cd ~/jetbot/jetbot/apps
+    $ python3 stats.py
+
+In practise the OLED is somewhat less readable than it appears in the Adafruit product photos.
+
+`stats.py` could probably be seriously optimized - it's continously spawning processes to gather the information it display and consumes a noticeable amount of CPU - taking up to 6% at times (of the total, i.e. at peak it's consuming up to a quarter of one core).
+
+Note: for whatever reason `stats.py` takes several seconds before it starts displaying anything on the OLED - initially nothing happens and it looks like it's not working.
+
+Note: intially I tried using the 2x3 stackable header from the [Adafruit stackable header pack](https://www.adafruit.com/product/85) but it was terrible quality (it was bought 5 years ago, so maybe they've changed supplier since) - the pins where too thin for female jumper wire to really grip. In the end I used branded header bought from Digikey - [SAM1198-50-ND](https://www.digikey.ch/products/de?keywords=SAM1198-50-ND).
 
 Testing
 -------
@@ -608,4 +650,593 @@ The `5` is a delay used to workaround the BCM283* I2C bug. For the Jetson Nano i
 
 OK - enough about the I2C bug - back to the Pi and control board code being so small...
 
-The real work is actually all in the separate [romi-32u4-arduino-library](https://github.com/pololu/romi-32u4-arduino-library) that provides all the classes needed to interface with the motors, encoders, buttons, LEDs and buzzer. And don't forget there's a separate library (that isn't pulled in for this setup) for the LSM9DS0.
+The real work is actually all in the separate [romi-32u4-arduino-library](https://github.com/pololu/romi-32u4-arduino-library) that provides all the classes needed to interface with the motors, encoders, buttons, LEDs and buzzer. And don't forget there's a separate library (that isn't pulled in for this setup) for the LSM6DS33.
+
+A better IDE
+------------
+
+Download Sloeber, an Eclipse based IDE for Arduino, for [Linux](http://eclipse.baeyens.it/stable.php?OS=Linux), [Mac](http://eclipse.baeyens.it/stable.php?OS=MacOS) or [Windows](http://eclipse.baeyens.it/stable.php?OS=Windows).
+
+Unpack the downloaded bundle and launch the IDE:
+
+    $ tar -xf ~/Downloads/V4.3.1_linux64.2018-10-10_08-21-58.tar.gz
+    $ mv sloeber sloeber-4.3.1
+    $ cd sloeber-4.3.1
+    $ ./sloeber-ide
+
+Wait for it to install various bits and pieces that it needs, then restore the Welcome view (i.e. reduce from maximized).
+
+Go to Windows / Preferences, expand Arduino, select _Third party index url's_, add `https://files.pololu.com/arduino/package_pololu_index.json`, in the main text field below the existing URLs, and click Apply.
+
+Now, just above, go to _Platforms and Boards_, expand pololu-a-star, then expand _Pololu A-Star Boards_, select the latest version (4.0.2 at the time of writing) and click Apply.
+
+Now, just above again, go to _Library Manager_, type romi32u4 into the search field and tick the checkbox beside the displayed library, then search for PololuRPiSlave and do the same.
+
+Finally click _Apply and Close_.
+
+Connect the control board via USB, click the _Create new sketch_ button, then:
+
+* Enter a project name, e.g. romi-jetson-nano.
+* From the platform folder dropdown select the Pololu one, for board select _Pololu A-Star 32U4_, then select the appropriate port, e.g. `/dev/ttyACM0`.
+* From the select code dropdown select _Sample sketch_, below expand Library, then PololuRPiSlave and tick RomiRPiSlaveDemo.
+* Click Finish.
+
+Now you can expand the project in the _Project Explorer_ view, go to `RomiRPiSlaveDemo.ino`, now you can control-click on things in the source like `PololuRPiSlave`.
+
+Make sure to click the _Link with Editor_ button in the _Project Explorer_ view so that this view stays in sync with the currently selected editor tab.
+
+Power mode
+----------
+
+By default there's no constraint on how much power the Nano module can ask for. The module itself can consume up to 2A and this is the maximum that can be provided via the micro-USB power connector.
+
+This can be problematic is the development board also has to power additional hardware such as a camera.
+
+You can switch the module into a lower power mode so that it consumes at most 1A:
+
+    $ sudo nvpmodel -m 1
+
+The values, e.g. 1 here, are defined in `/etc/nvpmodel.conf`, search for `POWER_MODEL` and you'll find (at least) two definitions with `ID` and `NAME` attributes.
+
+You can query the current power mode like so:
+
+    $ sudo nvpmodel -q
+    NV Power Mode: 5W
+    1
+
+And you can set it back to unconstrained power consumption (`MAXN`) like so:
+
+    $ sudo nvpmodel -m 0
+    $ sudo nvpmodel -q
+    NV Power Mode: MAXN
+    0
+
+### Clocks
+
+There's also a script called `jetson_clocks` that's purported aim is to turn off the [DVFS](https://community.arm.com/developer/tools-software/oss-platforms/w/docs/245/cpufreq-dvfs) (dynamic voltage and frequency scaling) governor (by settings the minimum frequency of various clocks to their maximum frequency, along with a few other changes).
+
+Show current settings:
+
+    $ sudo jetson_clocks --show
+
+Set everything to max and show the result:
+
+    $ sudo jetson_clocks
+    $ sudo jetson_clocks --show
+
+You can store and restore settings with `--store` and `--restore`.
+
+Unlike `nvpmodel` changes, the changes made by `jetson_clocks` do _not_ survive rebooting.
+
+If the aim is to disable the DVFS governor (as claimed in the answer to this Nvidia [forum question](https://devtalk.nvidia.com/default/topic/1050897/jetson-nano/what-does-jetson_clocks-do-/)), one wonders why all this fiddling (see `/usr/bin/jetson_clocks` - it's a bash script) when one can just set the governor into performance mode:
+
+    $ cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors 
+    interactive conservative ondemand userspace powersave performance schedutil
+    $ for gov in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+    do
+        echo performance | sudo tee -a $gov
+    done
+
+**Update:** see next section on benchmarking.
+
+### Benchmarking
+
+Nvidia have a [page](https://developer.nvidia.com/embedded/jetson-nano-dl-inference-benchmarks) that covers benchmarking the Nano against the Raspberry Pi and other boards.
+
+On the related [instructions page](https://devtalk.nvidia.com/default/topic/1050377/jetson-nano/deep-learning-inference-benchmarking-instructions/) they show how to run SSD-Mobilenet-V2 and other benchmarks.
+
+Once installed the SSD-Mobilenet-V2 benchmark can be run like so:
+
+    $ cd /usr/src/tensorrt/bin
+    $ sudo ./sample_uff_ssd_rect
+
+If we have the NV power model set to `MAXN`, we get a total run time and an average iteration time as follows:
+
+* ~5m 32s / ~28.7ms when using the clocks with their default value (as they exist after reboot).
+* ~4m 41s / ~27.9ms with all the `scaling_governor` values set to `performance`.
+* ~3m 37s / ~26.1ms after `jetson_clocks` is run (and the system rebooted to reset the previous changes to the `scaling_governor` values).
+
+So while, for `jetson_clocks`, the impact on the iteration time is only 9% against the defaults for iteration time, it's 35% against the total runtime (and also noticeably better than the `performance` timings).
+
+**Update:** `performance` only governs the CPUs if you do the following, as well as setting the `scaling_governor` values to `performance`, then the timings are near identical to those for `jetson_clocks`:
+
+    $ cat /sys/devices/57000000.gpu/devfreq/57000000.gpu/available_frequencies
+    76800000 153600000 230400000 307200000 384000000 460800000 537600000 614400000 691200000 768000000 844800000 921600000
+    $ echo 921600000 | sudo tee -a /sys/devices/57000000.gpu/devfreq/57000000.gpu/min_freq
+
+I tried the Phoronix benchmark suite to take a look at CPU multi-core performance as per Sparkfun's [SBC benchmarks page](https://learn.sparkfun.com/tutorials/single-board-computer-benchmarks/all).
+
+The [Phoronix test suite](https://github.com/phoronix-test-suite/phoronix-test-suite) says it requires the PHP CLI and when you try to install the first test it complains about the lack of the PHP SimpleXML extension. You can find the appropriate package names with `apt-cache search` and install them
+
+    $ sudo apt-get install php7.2-cli php7.2-xml
+
+The clone the suite, find the latest tag and check that out:
+
+    git clone git@github.com:phoronix-test-suite/phoronix-test-suite.git
+    cd phoronix-test-suite
+    git tag
+    git checkout v8.8.1
+
+Then install the executables to a local directory rather than `/usr`:
+
+    mkdir ~/phoronix
+    ./install-sh ~/phoronix
+    PATH=~/phoronix/bin:$PATH
+
+Then install and run e.g. the `compress-7zip` benchmark:
+
+    $ phoronix-test-suite install pts/compress-7zip
+    $ phoronix-test-suite benchmark pts/compress-7zip
+
+Initially I tried `pts/himeno`, as suggested by the Sparkfun page as a good multi-core test, but it only used a single core.
+
+It seems that not all the tests are maintained, so I just one of the tests at random from the ones used in the fairly recent [review](https://www.phoronix.com/scan.php?page=article&item=linux-128-threads) of a 64 core server (I chose one of the test that showed near linear scaling with the number of cores).
+
+The `compress-7zip` bumped up and down generally keeping most of the cores occupied and sometimes hitting 100% usage of all cores (but also sometimes hitting noticeably less). See the next section for power usage.
+
+Note: I used [this script](https://askubuntu.com/a/450136/734204) from SO to monitor the total CPU usage, i.e. across all cores. It proved easier to view than `htop` when it came to monitoring if `himeno` or `compress-7zip` were really using all cores.
+
+**Update:** if the goal is simply to maximize power consumption then something like [stress-ng](https://wiki.ubuntu.com/Kernel/Reference/stress-ng) would have made more sense for the CPU (and it can be installed directly using `apt`) and something like [gpu-burn](https://github.com/wilicc/gpu-burn) for a CUDA capable GPU. Note: various people have made minor improvements to gpu-burn that have not been merged to the original - see [spaulaus](https://github.com/spaulaus/gpu-burn/commits/master), [madisongh](https://github.com/madisongh/gpu-burn/commits/master), [Fladrif](https://github.com/Fladrif/gpu-burn/commits/feature/no-cuda-failure), [willfurnass](https://github.com/willfurnass/gpu-burn/commits/master), [yotabits](https://github.com/yotabits/gpu-burn/commits/master), [VanAndelInstitute](https://github.com/VanAndelInstitute/gpu-burn/commits/master), [nanoant](https://github.com/nanoant/gpu-burn/commits/windows-vs2015) and [davidstack](https://github.com/davidstack/gpu-burn/commits/master). Most of these look uninteresting but perhaps there's something in there among the various additional commits.
+
+### Monitoring
+
+Normally you'd use `sensors` to monitor e.g. CPU temperatures and `nvidia-smi` to monitor GPU usage. However according to [this post](https://devtalk.nvidia.com/default/topic/1023581/jetson-tx1/nvidia-smi-command-not-found-i-m-obviously-missing-something/) `nvidia-smi` isn't available for Tegra (I looked and couldn't find it) and `sensors` returns very little information on my Nano:
+
+    $ sudo apt install lm-sensors
+    $ sudo sensors
+    thermal-fan-est-virtual-0
+    Adapter: Virtual device
+    temp1:        +39.0 C  
+
+    iwlwifi-virtual-0
+    Adapter: Virtual device
+    temp1:        +39.0 C
+
+Tegrastats also produces very little information:
+
+    $ sudo tegrastats
+    RAM 888/3965MB (lfb 470x4MB) IRAM 0/252kB(lfb 252kB) CPU [0%@921,0%@921,off,off] EMC_FREQ 0%@1600 GR3D_FREQ 0%@76 APE 25 PLL@36.5C CPU@39C iwlwifi@38C PMIC@100C GPU@38.5C AO@44C thermal@39C POM_5V_IN 1661/1661 POM_5V_GPU 0/0 POM_5V_CPU 165/165
+
+`GR3D` is the GPU engine.
+
+For monitoring the GPU this doesn't seem much more useful than:
+
+    $ cat /sys/devices/57000000.gpu/load
+    0
+
+From searching the Nvidia forums, this seems to be about it as far as the standard tools go. However many posters recommend [jetson-stats](https://github.com/rbonghi/jetson_stats) - which I found simple to install and useful:
+
+    $ sudo -H pip install jetson-stats
+    $ sudo jtop
+
+This also installs `jetson-release` which shows useful information about the system (including the Jetpack version - which as noted elsewhere isn't readily retrievable):
+
+    $ jetson-release 
+     - NVIDIA Jetson NANO/TX1
+       * Jetpack 4.2 [L4T 32.1.0]
+       * CUDA GPU architecture 5.3
+     - Libraries:
+       * CUDA 10.0.166
+       * cuDNN 7.3.1.28-1+cuda10.0
+       * TensorRT 5.0.6.3-1+cuda10.0
+       * Visionworks 1.6.0.500n
+       * OpenCV 3.3.1 compiled CUDA: NO
+     - Jetson Performance: inactive
+
+The standard tools `htop` and `iotop` work as expected:
+
+    $ sudo apt install iotop
+    $ sudo iotop
+
+    $ sudo apt install htop
+    $ htop
+
+For tools that just output current values and then exit you can use [`watch`](http://manpages.ubuntu.com/manpages/trusty/man1/watch.1.html) to run the tool periodically and display the updated value.
+
+### Power consumption
+
+The following figures are gotten from hooking up and visually monitoring a simple [power monitor](https://portablepowersupplies.co.uk/home/premium-usb-dc-power-monitor) between the power supply and the USB power connctor. The voltage displayed was always around 5.2V.
+
+At idle (with no adjustments to clocks etc. but with the NV power model set to `MAXN` the Nano consumes about 0.23A.
+
+When streaming 3280x2464 video (as outline at the start of [`jetson-nano-gstreamer.md`](jetson-nano-gstreamer.md)) it consumes about 0.67A when simply ready to stream and 0.75 when streaming.
+
+When running the SSD-Mobilenet-V2 it consumes around 1.4A during the iterations phase.
+
+It didn't use noticeably more Amps when running SSD-Mobilenet-V2 after calling `jetson_clocks`, but the idle consumption goes up noticeably to 0.45A.
+
+When running `compress-7zip` it used around 1A max (with quite a lot of variability). So keeping the GPU occupied seems to use noticeably more power than keeping the CPU cores occupied.
+
+### Brownouts
+
+When running on batteries the system would shutdown when running the SSD-Mobilenet-V2 at the point when it starts iterating and the current usages jumps to 1.4A.
+
+But it didn't shutdown when running `compress-7zip` - so presumably too much current is somewhere between 1A and 1.4A.
+
+While running `compress-7zip` you could push things over the edge by starting up streaming (without actually connecting any client).
+
+So it doesn't seem as if the Romi regulator has much more than 1A leftover to power the SBC.
+
+### Switching between low and high power mode
+
+So unfortunately it looks like we'll need to run the Romi setup in 5W mode when it's running on battery. So to be able to switch between low and high power modes we first need to record the standard clock settings.
+
+First reboot the Nano to reset any changes made to the clocks:
+
+    $ sudo reboot now
+
+Then login again and record the default clock settings:
+
+    $ sudo jetson_clocks --store l4t_dfs-defaults.conf
+
+When we're doing something GPU intensive then the Nano should be powered using a main power supply, rather than batteries, and switched into high power mode like so:
+
+    $ sudo nvpmodel -m 0
+    $ sudo nvpmodel -q
+    $ sudo jetson_clocks
+
+And when the Romi is running on battery power it needs to be switched into 5W low power mode like so:
+
+    $ sudo nvpmodel -m 1
+    $ sudo nvpmodel -q
+    $ sudo jetson_clocks --restore l4t_dfs.conf
+
+As noted the `nvpmodel` changes do survive reboots but the clock changes do not - so you'll probably never need to actively switch the clocks into default mode as you'll presumably always switch to battery power only after first shutting down the system (but you will need to actively switch the clocks into high power mode every time you need this after a restart).
+
+### Low power breakouts
+
+Does switch to the low power 5W mode end brownout issues? Unfortunately not. In 5W mode I could now run the SSD-Mobilenet-V2 to completion on batteries without issue (with an iteration time of 40ms). I could also run `compress-7zip` and even start up streaming (which previously pushed things over the edge), however if I actually started a remote client, to view the streamed data, this did push things over the edge and the system shut down.
+
+TODO: see if this is still the case if you solder in the power wires before the regulator, i.e. to 5V rather than VREG.
+
+Nano control continued
+----------------------
+
+Remove the previously installed orignal `pololu-rpi-slave-arduino` library and install my fork:
+
+    $ ssh ghawkins@JetsonNano.local
+    $ rm -r pololu-rpi-slave-arduino-library
+    $ git clone git@github.com:george-hawkins/pololu-rpi-slave-arduino-library.git
+
+Make sure the relevant I2C bus is running at 400kHz:
+
+    $ echo 400000 | sudo tee -a /sys/bus/i2c/devices/i2c-1/bus_clk_rate
+
+Start the server:
+
+    $ cd pololu-rpi-slave-arduino-library/pi
+    $ python3 ./server.py 
+
+In your browser open <http://jetsonnano.local:5000/>
+
+Set I2C bus speed at startup
+----------------------------
+
+    $ ssh ghawkins@JetsonNano.local
+    $ cd git/pololu-romi-jetbot
+    $ sudo cp i2c-1-400kHz.service /etc/systemd/system
+    $ sudo systemctl daemon-reload
+    $ systemctl enable i2c-1-400kHz
+
+See the `i2c-1-400kHz.service` file itself for more details.
+
+Camera
+------
+
+The original module is backed by a little circle of sponge and a little sticky gel pad (like the gel that holds ads on cards in place in magazines). It's easy to peal the module off and scape off any remaining gel on the PCB.
+
+Software setup
+--------------
+
+Using the ["from scratch"](https://github.com/NVIDIA-AI-IOT/jetbot/wiki/Create-SD-Card-Image-From-Scratch) Jetbot wiki page as a basis, we can start at step 4 as we've already got the basics setup.
+
+### Preliminaries
+
+Install PIP (Python Package Installer - see the [PIP documentation](https://pip.pypa.io/en/stable/) and the the [overview of packaging for Python](https://packaging.python.org/overview/)) and PIL (the Python 3 [Pillow fork](https://pillow.readthedocs.io/en/stable/handbook/overview.html) of the Python Imaging Library):
+
+    $ sudo apt-get update
+    $ sudo apt install python3-pip python3-pil
+
+During installation it asked me if I wanted to "restart services during package upgrades without asking" - the default was no but I switched this to yes.
+
+You can see that [NumPy](https://www.numpy.org/) (the primary scientific computing package for Python) has already been installed with Ubuntu [apt](https://help.ubuntu.com/lts/serverguide/apt.html):
+
+    $ apt list --installed | fgrep numpy
+    python-numpy/bionic,now 1:1.13.3-2ubuntu1 arm64 [installed]
+
+But this is the Python 2 version of NumPy. We _could_ install `python3-numby` with apt but instead we get PIP to install the latest Python 3 version:
+
+    $ sudo -H pip3 install -U numpy
+
+This takes a little while (5 minutes on my Nano).
+
+Note: here I always use `sudo -H pip3` whereas the original "from scratch" wiki page does not - using `-H` (which sets the `HOME` environment variable to that of the target user, i.e. root in this case) stops PIP complaining about ownership issues to do with directories under `~/.cache/pip`.
+
+If you install it with `sudo` then it ends up under `/usr/local/lib/python3.6/dist-packages`:
+
+    $ pip3 show numpy
+
+We could install NumPy just for the current user by omitting the `sudo`. In which case it would end up under `~/.local/lib/python3.6/site-packages`. But as we're planning to run things later via systemd services it's easier to just install things globally.
+
+**Update:** actually the systemd service files generated later run as the user who does all this work here, rather than running as root, so it probably would be fine to skip all the sudo-ing for all the `pip3 install` commands.
+
+### TensorFlow
+
+The install the pre-built [TensorFlow](https://www.tensorflow.org/) pip wheel (as described [here](https://docs.nvidia.com/deeplearning/frameworks/install-tf-jetson-platform/index.html))...
+
+Install the Tensor Flow dependencies:
+
+    $ sudo apt install libhdf5-serial-dev hdf5-tools libhdf5-dev zlib1g-dev zip libjpeg8-dev
+
+We've already installed `python-pip3` and it's ended up under `/usr/bin` and `/usr/lib/python3/dist-packages/pip`:
+
+    $ type pip3
+    $ dpkg-query -L python3-pip
+
+We can see the version installed like so:
+
+    $ pip3 --version
+    pip 9.0.1 from /usr/lib/python3/dist-packages (python 3.6)
+
+And now ask PIP to upgrade itself to the very latest version:
+
+    $ sudo -H pip3 install -U pip
+
+Unfortunately this breaks the `pip3` wrapper under `/usr/bin`:
+
+    $ pip3 --version
+    Traceback (most recent call last):
+      File "/usr/bin/pip3", line 9, in <module>
+        from pip import main
+    ImportError: cannot import name 'main'
+
+This seems to be an ancient and well covered issue - see this [SO question](https://stackoverflow.com/q/28210269/245602) (the title refers to Windows 7 but it's not Windows specific). It happens if the original `pip3` is earler than version 10 (as is the case here).
+
+You can either avoid the wrapper altogether and use PIP via `python3` like so:
+
+    $ python3 -m pip --version
+    pip 19.1.1 from /usr/local/lib/python3.6/dist-packages/pip (python 3.6)
+
+Or (as I did) you can edit the wrapper:
+
+    $ sudo vim /usr/bin/pip3
+
+And update it as per this [SO answer](https://stackoverflow.com/a/49900741/245602), i.e. change the `main` in the `import` line to `__main__` and preceed the `main()` in the `sys.exit` line with `__main__._` (note the `_` after the dot).
+
+Now install various Python packages:
+
+    $ sudo -H pip3 install -U numpy grpcio absl-py py-cpuinfo psutil portpicker six mock requests gast h5py astor termcolor protobuf keras-applications keras-preprocessing wrapt google-pasta
+
+This takes a long amount of time (about 24 minutes on my Nano).
+
+Now install the latest Nvidia built version of TensorFlow:
+
+    $ sudo -H pip3 install --pre --extra-index-url https://developer.download.nvidia.com/compute/redist/jp/v42 tensorflow-gpu
+
+Note that the `v42`, at the end of the URL used above, must match the Jetpack version that you're using. There doesn't seem to be a direct way of working out what version of Jetpack you're running, instead you can infer it from the cuDNN version which you can find like so:
+
+    $ cat /usr/include/cudnn.h | fgrep -m1 -A2 CUDNN_MAJOR
+    #define CUDNN_MAJOR 7
+    #define CUDNN_MINOR 3
+    #define CUDNN_PATCHLEVEL 1
+
+Now we know the cuDNN version is 7.3.1 we can search for that in the Jetpack [release notes](https://docs.nvidia.com/jetson/jetpack/release-notes/index.html) - and find that 7.3.1 was the version that shipped with Jetpack 4.2.
+
+You can check that everything has installed fine by entering `import tensorflow` using `python3` in REPL mode:
+
+    $ python3
+    >>> import tensorflow
+
+After a short pause you should see the `>>>` prompt again indicating that TensorFlow could be imported without any errors.
+
+### PyTorch
+
+[PyTorch](https://pytorch.org/) is a deep learning platform. They don't release their packages via [PyPI](https://pypi.org/) so for most systems you have to install it as outlined on their [getting started page](https://pytorch.org/get-started/locally/).
+
+However they don't release PyTorch wheels built for Jetson. The "from scratch" wiki page covers installing an old version of PyTorch that they've uploaded to Google Drive. However a better approach seems to be to use the packages Nvidia make available via the PyTorch for Jetson [forum topic](https://devtalk.nvidia.com/default/topic/1049071/jetson-nano/pytorch-for-jetson-nano/):
+
+    $ wget https://nvidia.box.com/shared/static/j2dn48btaxosqp0zremqqm8pjelriyvs.whl -O torch-1.1.0-cp36-cp36m-linux_aarch64.whl
+    $ sudo -H pip3 install torch-1.1.0-cp36-cp36m-linux_aarch64.whl
+
+Notes:
+
+* `.whl` wheel files specify an architecture, e.g. `x86_64` or `aarch64`, you can determine your architecture on Linux systems with the `arch` command. 
+* If building things like PyTorch from scratch (e.g. as in [this gist](https://gist.github.com/dusty-nv/ef2b372301c00c0a9d3203e42fd83426) from Nvidia developer Dustin Franklin) you need to know your CUDA version - you can find this in `/usr/local/cuda/version.txt`. The gist references the forum post mentioned above - so this really does seem to be the place to pickup PyTorch packages for Jetson.
+
+Now install [torchvision](https://pytorch.org/docs/stable/torchvision/index.html) (a package of "popular datasets, model architectures, and common image transformations for computer vision"):
+
+    $ sudo -H pip3 install -U torchvision
+
+### Traitlets
+
+[Traitlets](https://github.com/ipython/traitlets) add strong typing enforcement to Python object attributes, along with other features. I'm not sure how this is different to [mypy](https://github.com/python/mypy) which checks the type hints introduced by [PEP 484](https://www.python.org/dev/peps/pep-0484/) in Python 3.5.
+
+The "from scratch" wiki page says one should install Traitlets directly from GitHub in order to get the `unlink` method support. However the last commit involving `unlink` was [`b6c289e3`](https://github.com/ipython/traitlets/commit/b6c289e3) which has been in there since version 4.1.0 released in January 2016:
+
+    $ git tag --contains b6c289e3
+
+So if that's the only reason for installing from GitHub then it seems fine to install the latest version the normal way:
+
+    $ sudo -H pip3 install -U traitlets
+    $ pip show traitlets
+    Name: traitlets
+    Version: 4.3.2
+    ...
+
+Note: Traitlets is under active development, but their last [release](https://github.com/ipython/traitlets/releases) was in February 2017. They seems to be stuck on getting the next major version - [5.0](https://github.com/ipython/traitlets/milestone/5) - out the door. So there may be other more recent things that one might want to pull in than `unlink`.
+
+**Update:** actually various Jetbot classes [inherit](https://docs.python.org/3/tutorial/classes.html#inheritance) from the traitlet [configurable objects](https://traitlets.readthedocs.io/en/stable/config.html), e.g. [`Robot`](https://github.com/NVIDIA-AI-IOT/jetbot/blob/master/jetbot/robot.py) inherits from `SingletonConfigurable`.
+
+### Jupyter and JupyterLab
+
+[Jupyter](https://jupyter.org/) and [JupyterLab](https://jupyterlab.readthedocs.io/en/stable/) (the next-generation web-based user interface for Jupyter) provide the web based notebook interface that'll be used to work through the various Jetbot [examples](https://github.com/NVIDIA-AI-IOT/jetbot/tree/master/notebooks) later, such as Jetbot collision avoidance.
+
+    $ sudo apt install nodejs npm
+    $ sudo pip3 install jupyter jupyterlab
+
+This takes a few minutes. As does installing these lab extensions:
+
+    $ sudo jupyter labextension install @jupyter-widgets/jupyterlab-manager
+    $ sudo jupyter labextension install @jupyterlab/statusbar
+
+There are quite a lot of warnings when installing the extensions and the final output looks worryingly like a stack trace but seems to be fine.
+
+Generate a default Jupyter config (for more details see the [config file documentation](https://jupyter-notebook.readthedocs.io/en/stable/config.html)):
+
+    $ jupyter lab --generate-config
+
+Now setup a password for accessing the JupyterLab web interface from outside the Nano (as covered in the ["running a notebook server" documentation](https://jupyter-notebook.readthedocs.io/en/stable/public_server.html)):
+
+    $ jupyter notebook password
+
+Use `jetbot` as the password (as done in the "from scratch" wiki page) just to keep things simple.
+
+### Jetbot project
+
+We've already installed smbus so we don't need to do that:
+
+    $ apt list --installed | fgrep smbus
+
+Clone the Jetbot repository and get ready to install it:
+
+    $ git clone https://github.com/NVIDIA-AI-IOT/jetbot
+    $ cd jetbot
+    $ sudo apt install cmake
+
+There's only one C++ file (found in the [`ssd_tensorrt`](https://github.com/NVIDIA-AI-IOT/jetbot/tree/master/jetbot/ssd_tensorrt) subdirectory) that necessitates CMake.
+
+Now install:
+
+    $ sudo python3 setup.py install
+    $ pip3 show jetbot
+    Name: jetbot
+    Version: 0.3.0
+    Summary: An open-source robot based on NVIDIA Jetson Nano
+    ...
+
+Note: this pulls in a number of other libraries (specified in the `install_requires` section of the [`setup.py`](https://github.com/NVIDIA-AI-IOT/jetbot/blob/master/setup.py) file).
+
+Now install the Jetbot [systemd services](https://wiki.archlinux.org/index.php/systemd#Using_units) exactly as per the "from scratch" wiki page:
+
+    $ cd jetbot/utils
+    $ python3 create_stats_service.py
+    $ sudo mv jetbot_stats.service /etc/systemd/system/jetbot_stats.service
+    $ sudo systemctl enable jetbot_stats
+    $ sudo systemctl start jetbot_stats
+    $ python3 create_jupyter_service.py
+    $ sudo mv jetbot_jupyter.service /etc/systemd/system/jetbot_jupyter.service
+    $ sudo systemctl enable jetbot_jupyter
+    $ sudo systemctl start jetbot_jupyter
+
+All the scripts `create_stats_service.py` and `create_jupyter_service.py` do is write out the files `jetbot_stats.service` and `jetbot_jupyter.service`, substituting in the current username and directory to that the values `User` and `WorkingDirectory` are set appropriately in each file.
+
+The `jetbot_stats` service just starts the [`stats.py`](https://github.com/NVIDIA-AI-IOT/jetbot/blob/master/jetbot/apps/stats.py) script going at startup. This is just a slightly modified version of the original Adafruit [example script](https://github.com/adafruit/Adafruit_Python_SSD1306/blob/master/examples/stats.py) for outputting the IP address, CPU load and disk and memory usage on the [PiOLED](https://www.adafruit.com/product/3527).
+
+Note: the modified Jetbot version still determines the CPU load but doesn't output it, instead it outputs two IP addresses - the one associated with `eth0` and the one associated with `wlan0`.
+
+TODO: wire up the PiOLED to the Romi Jetbot setup.
+
+If you don't have the PiOLED wired up then don't enabled `jetbot_stats` - if there's no I2C device at the expected address the `jetbot_stats` script will repeatedly fail and be restarted by systemd, with surprisingly high CPU usage - enough to have a noticeable affect on power consumption. If you have started and enabled it then you can see the failures and disable and stop if like so:
+
+    $ journalctl -u jetbot_stats
+    $ sudo systemctl disable jetbot_stats
+    $ sudo systemctl stop jetbot_stats
+
+The `jetbot_jupyter` service just starts JupyterLab going at startup, listening on all interfaces, i.e. accessible externally.
+
+Finally copy the example notebooks into `~/Notebooks`:
+
+    $ cp -r ~/jetbot/notebooks ~/Notebooks
+
+There doesn't seem to be any particular reason for copying the files to `~/Notebooks`. When you access Jupyter via the web interface later you can see it just shows all the contents of the directory specified by `WorkingDirectory` in the service file `/etc/systemd/system/jetbot_jupyter.service`. So it doesn't look like there's anything special about `~/Notebooks` - I presume you could just as well navigate to the original files under `~/jetbot/jetbot/notebooks`.
+
+### Final steps
+
+I didn't setup a swap file as outlined in the "from scratch" wiki page - swapping to an SD card doesn't sound like a great idea. But perhaps will prove unavoidable.
+
+If I log in and out now I see:
+
+    *** System restart required ***
+
+So lets do that:
+
+    $ sudo reboot now
+
+Once the machine is restarted you can reach the JupyterLab web interface, running on the Nano, from your local machine with the URL <http://jetsonnano.local:8888/> and entering the password setup earlier, i.e. `jetbot`.
+
+TODO: add note elsewhere (when starting the Romi web interface for controlling the motors) about mDNS, i.e. names like jetsonnano.local, not working it using Chrome on Android - you have to use the raw IP address. It seems this the Android specific and will never be fixed - <https://bugs.chromium.org/p/chromium/issues/detail?id=405925>
+
+Now you're ready to get the example working with the Romi setup - <https://github.com/NVIDIA-AI-IOT/jetbot/wiki/examples>
+
+TODO: the jetbot repo contains an app - [`wander.py`](https://github.com/NVIDIA-AI-IOT/jetbot/blob/master/jetbot/apps/wander.py) - and a notebook - [`road_following`](https://github.com/NVIDIA-AI-IOT/jetbot/tree/master/notebooks/road_following) - that seem to be orphaned, they're not mentioned in either the repo itself or the wiki.
+
+Notebooks
+---------
+
+On moving from one notebook to the next it's necessary to go to Kernel / Shutdown All Kernels... and then go to Kernel / Restart Kernel... for the notebook that you've moved to.
+
+When you take snapshots using the second noteboot you can see the results in the left-hand-side panel - there'll you'll see the directory "snapshots". You can also find this directory on your Nano under `~/Notebooks/teleoperation/snapshots`.
+
+Controllers
+-----------
+
+A [gamepad](https://en.wikipedia.org/wiki/Gamepad) is needed for the [teleoperation example](https://github.com/NVIDIA-AI-IOT/jetbot/wiki/examples#example-2---teleoperation).
+
+You can test if a particular gamepad will be recognized using <https://html5gamepad.com/>
+
+I visited the site using Chrome, which worked perfectly. According to the [browser support](https://html5gamepad.com/browser-support) page other browsers should work well too - Firefox, Safari and Opera and Microsoft Edge are all listed there, however the latest versions of Internet Explorer are not, i.e. 11 and 10.
+
+If you don't have a gamepad then the wired [Logitech F310](https://www.logitechg.com/en-us/products/gamepads/f310-gamepad.html) is about the cheapest name brand one you can buy. Obviously there are cheaper no name models, like [this one](https://www.banggood.com/2_4GHz-Wireless-Game-Controller-Gamepad-Joystick-For-Android-TV-Box-PC-p-1143410.html) from Banggood, but I've no idea if they'll work with any particular setup.
+
+On my Linux system the F310 in fact worked better than any other controller I tried. It plugged in and worked without any extra steps and the Html5gamepad site recognized all its buttons as expected.
+
+Note: the F310 does not support vibration.
+
+I also tried an Nvidia Shield controller and a PS4 controller - the Shield controller didn't work at all under any circumstances and the PS4 didn't work in wireless mode but did work when connected via USB (however the Html5gamepad site did not recognise some of its buttons). I've read that things have improved in the latest versions of Ubuntu so your experience may differ.
+
+I also had fairly similar results using a Mac. Again the F310 worked best (I suspect as a 3rd party controller Logitech have put a bit more effort into ensuring their controller works well with different systems). Unlike on Linux I did have to install the [Logitech gaming software](https://support.logi.com/hc/en-us/articles/360025298053) first before it would work.
+
+TODO: buying a gamepad simply to use it for a few minutes with the teleoperation example is a bit excessive. Write a Python class that can replace the `ipywidgets.widgets.Controller` class, exposing the cursor keys as `axes[1]` and `axes[3]` so it can plug straight into the `left_link` and `right_link` logic without any modification. Even cooler would be to have the cursor keys controlling velocity and rotation and translate these into left and right values such that you got more intuitive control than the tank-like control that you get with a real controller.
+
+Performance
+-----------
+
+TODO: see what follow-up there is to my performance post - <https://devtalk.nvidia.com/default/topic/1056854/jetson-nano/terrible-performance-when-gpu-governor-set-to-performance-/>
+
+So as demonstrated above the Romi cannot provide enough current for MAXN mode for the Nano.
+
+So when running on battery you need to set things to 5W mode:
+
+    $ sudo nvpmodel -m 1
+    $ sudo nvpmodel -q
+    NV Power Mode: 5W
+    1
+    
+And when its running via USB power it can be set to run at full power:
+
+    $ sudo nvpmodel -m 0
+    $ sudo nvpmodel -q
+    NV Power Mode: MAXN
+    0
+    $ sudo jetson_clocks
+

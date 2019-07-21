@@ -16,7 +16,7 @@ And then add `NOPASSWD:` to this line:
 
     %sudo   ALL=(ALL:ALL) ALL
 
-So ends up being:
+So it ends up being:
 
     %sudo   ALL=(ALL:ALL) NOPASSWD: ALL
 
