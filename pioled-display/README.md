@@ -27,8 +27,6 @@ However all becomes clear if you look at [`Adafruit_Python_GPIO`](https://github
 
 So let's create a new version of `pioled-display` that uses uses Blinka...
 
-The original `stats.py` uses the old 
-
     $ sudo apt install python3-venv
     $ python3 -m venv env
     $ source env/bin/activate
@@ -53,11 +51,16 @@ You have to follow the instructions from <https://pypi.org/project/Jetson.GPIO/>
     $ sudo usermod -a -G gpio $USER
     $ exit
 
-Relogin and...
+Relogin and check you're now in the `gpio` group:
+
+    $ groups
+    ... gpio
+
+Carry on with the instructions:
 
     $ sudo cp /opt/nvidia/jetson-gpio/etc/99-gpio.rules /etc/udev/rules.d
 
-The Jetson.GPIO page claims you can reboot or do:
+The Jetson.GPIO page says you can reboot or instead do:
 
     $ sudo udevadm control --reload-rules
     $ sudo udevadm trigger
