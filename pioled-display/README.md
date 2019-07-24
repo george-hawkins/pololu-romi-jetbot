@@ -7,6 +7,25 @@ To display a piece of text:
     $ ./text-to-bmp '1 2 3'
     $ ./pioled-display tmp/tmp.tJubLaZTD7.bmp
 
+Installing a NetworkManager script
+----------------------------------
+
+To display the IP address associated with `wlan0` (or `eth0` if an address for `wlan0` isn't available).
+
+    $ cd ~/git/pololu-romi-jetbot/pioled-display
+    $ file=99-ip-to-pioled
+    $ echo '#!/bin/bash' > $file
+    $ echo $(readlink -f ip-to-pioled) >> $file
+    $ chmod a+x $file
+    $ cat $file
+    #!/bin/bash
+    /home/ghawkins/git/pololu-romi-jetbot/pioled-display/ip-to-pioled
+    $ sudo cp $file /etc/NetworkManager/dispatcher.d && rm $file
+
+Note: this script assumes that you're using IPv4 and that the interfaces are `eth0` and `wlan0`.
+
+For more about network services, see ["network services with NetworkManager dispatcher"](https://wiki.archlinux.org/index.php/NetworkManager#Network_services_with_NetworkManager_dispatcher).
+
 Upgrading to Blinka
 -------------------
 

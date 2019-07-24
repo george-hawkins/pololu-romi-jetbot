@@ -1,0 +1,32 @@
+#!/bin/bash -e
+
+dir=$(dirname $0)
+
+cd $dir
+
+getAddr() {
+    ip -4 addr show $1 2> /dev/null | sed -n 's?.*inet \([0-9.]\+\)/24 .*?\1?p'
+}
+
+addr=$(getAddr wlan0)
+
+if [ -n "$addr" ]
+then
+    addr="W: $addr"
+else
+    addr=$(getAddr eth0)
+
+    if [ -n "$addr" ]
+    then
+        addr="E: $addr"
+    else
+        exit 0
+    fi
+fi
+
+image=$(./text-to-bmp "$addr")
+
+source ./env/bin/activate
+./pioled-display $image
+
+rm $image
