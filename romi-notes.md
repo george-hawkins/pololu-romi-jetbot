@@ -1265,7 +1265,7 @@ E.g. if I started recording a video at 17:05:32UTC and recorded for 5 minutes, I
 
 I.e. I want to work with absolute times, that depend on when the video was captured, rather than times relative to the start of the video file - so 17:07:40UTC rather than 2m 8s.
 
-I apologise for the cargo-cult nature of my pipelines. I added `do-timestamp=true` because it sounded like a "good thing" but I don't know what impact it has. Similarly I chose Matroska because <https://www.linuxtv.org/wiki/index.php/GStreamer> said that it, in contract to AVI and other fortmats, supports timestamps, but again I don't really know on what level this implies and whether it's relevant to what I want to achieve.
+I apologise for the cargo-cult nature of my pipelines. I added `do-timestamp=true` because it sounded like a "good thing" but I don't know what impact it has. Similarly I chose Matroska because <https://www.linuxtv.org/wiki/index.php/GStreamer> said that it, in contract to AVI and other fortmats, supports timestamps, but again I don't really know on what level this applies and whether it's relevant to what I want to achieve.
 
 So the container format is unimportant to me.
 
