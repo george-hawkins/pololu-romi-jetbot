@@ -1240,3 +1240,29 @@ And when its running via USB power it can be set to run at full power:
     0
     $ sudo jetson_clocks
 
+Record MJPEG
+------------
+
+Question: extract a frame from an MJPEG file by specifying the wall-clock time at which it was captured?
+
+I want to record video captured from a camera to a file in MJPEG format. I do this like so:
+
+    $ gst-launch-1.0 nvarguscamerasrc do-timestamp=true ! 'video/x-raw(memory:NVMM), width=3280, height=2464' ! nvjpegenc ! matroskamux ! filesink location=out.mkv
+
+And I've found I can extract all the frames to individual JPEG files like so:
+
+    $ gst-launch-1.0 filesrc location=out.mkv ! matroskademux ! multifilesink location=out-%05d.jpg
+
+But that's not what I want to do, I want to extract a particular frame by specifying the wall-clock time at which it was captured.
+
+E.g. if I started recording a video at 17:05:32UTC and recorded for 5 minutes, I'd like to be able a extract a frame by specifying that it was captured at e.g. 17:07:40UTC.
+
+I.e. I want to work with absolute times, that depend on when the video was captured, rather than times relative to the start of the video file - so 17:07:40UTC rather than 2m 8s.
+
+Point out that I don't really know what the impact is of `do-timestamp=true`
+I only chose Matroska because of https://www.linuxtv.org/wiki/index.php/GStreamer saying it supports timestamps in contrast to AVI, but don't really know what this implies.
+I.e. the container format isn't important to me.
+
+I was hoping that it might be as simple as that the wall-clock time could be encoded as EXIF data in the individual JPEG images of the MJPEG stream.
+
+And then something could search the resulting file for the JPEG frame with the requested wall-clock time in its EXIF data and extract it.
