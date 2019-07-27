@@ -1,0 +1,40 @@
+#!/bin/bash -e
+
+fail() {
+    echo $* 1>&2
+    exit 1
+}
+
+[ $# -eq 3 ] || fail "Usage: $0 input-video timestamps-file output-dir"
+
+input=$1
+timestamps=( $(< $2) )
+output=$3
+count=${#timestamps[@]}
+
+# Note: sometime '|| true' is needed below to prevent errexit from kicking.
+
+mkdir -p $output
+
+filter=''
+for timestamp in ${timestamps[@]}
+do
+    if [ -n "$filter" ]
+    then
+        filter="$filter + "
+    fi
+    filter="${filter}lt(prev_pts*TB,$timestamp)*gte(pts*TB,$timestamp)"
+done
+
+quiet='-nostdin -y -loglevel warning'
+tmp_format="$output/tmp-%03d.jpg"
+
+ffmpeg $quiet -i $input -filter:v "select='$filter'" -vframes $count $tmp_format
+
+i=1
+for timestamp in ${timestamps[@]}
+do
+    tmp=$(printf $tmp_format $i)
+    mv $tmp "$output/image-$timestamp.jpg"
+    let i++ || true
+done

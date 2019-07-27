@@ -1270,3 +1270,73 @@ I apologise for the cargo-cult nature of my pipelines. I added `do-timestamp=tru
 So the container format is unimportant to me.
 
 I was hoping that it might be as simple as that the wall-clock time could be included as EXIF data in the individual JPEG images of the MJPEG file. And then something could search the MJPEG file for the JPEG frame with the requested wall-clock time in its EXIF data and extract it.
+
+---
+
+Capture and confirm frame rate:
+
+    $ gst-launch-1.0 nvarguscamerasrc ! 'video/x-raw(memory:NVMM), width=3280, height=2464, framerate=21/1' ! nvjpegenc ! matroskamux ! filesink location=out.mkv
+    $ ffprobe -loglevel panic -show_streams out.mkv | fgrep r_frame_rate
+    r_frame_rate=21/1
+
+Oddly if you don't specify the actual frame rate explicitly, as above, then `nvarguscamerasrc` will claim the rate is 30 fps and the resulting video will run at the wrong speed and any attempt to extract frames by time will be off. To see this run `gst-launch-1.0` with `-v` like so:
+
+    $ gst-launch-1.0 -v nvarguscamerasrc do-timestamp=true ! 'video/x-raw(memory:NVMM), width=3280, height=2464' ! nvjpegenc ! matroskamux ! filesink location=out.mkv
+    ...
+    /GstPipeline:pipeline0/GstNvArgusCameraSrc:nvarguscamerasrc0.GstPad:src: caps = video/x-raw(memory:NVMM), width=(int)3280, height=(int)2464, format=(string)NV12, framerate=(fraction)30/1
+    ...
+    $ ffprobe -loglevel panic -show_streams out.mkv | fgrep r_frame_rate
+    r_frame_rate=30/1
+
+Let's experiment with extracting frames by timestamp from a video. First put a stopwatch in the cameras field of view, so you can confirm the times look right, and capture a bit more than 5 seconds of video:
+
+    $ gst-launch-1.0 nvarguscamerasrc ! 'video/x-raw(memory:NVMM), width=3280, height=2464, framerate=21/1' ! nvjpegenc ! matroskamux ! filesink location=out.mkv
+
+Make sure `framerate` is set as noted up above.
+
+We could extract every frame like so:
+
+    $ gst-launch-1.0 filesrc location=out.mkv ! matroskademux ! multifilesink location=out-%05d.jpg
+
+Instead lets try and extract every single in the first 5 seconds of the video by specifying its timestamp. First let's generate the timestamps:
+
+21 fps is one frame every 0.0476 so lets try and extract every single in the first 5 seconds of the video. First lets generate the timestamps:
+
+    $ interval=$(bc <<< 'scale=4; 1/21')
+    $ i=0.0001; while (( $(bc <<< "$i < 5") )); do printf '%.4f\n' $i; i=$(bc <<< "$i + $interval"); done > timestamps
+
+Above we calculate the interval, 21 fps is one frame every 0.0476, then start from 0.0001 and increment while we're still less than the 5 second mark.
+
+Note that you have to start from a value greater than zero, i.e. `i` above can't be `0`. `0` won't select the first frame, instead it'll result in an error.
+
+Then use the `extract-frames` script, included here, to extract the frames at the timestamps specified in the file `timestamps` that we generated above:
+
+    $ ./extract-frames out.mkv timestamps frames
+    $ ls frames
+    image-0.0001.jpg
+    image-0.0477.jpg
+    image-0.0953.jpg
+    ...
+
+This is quite slow - 34 seconds on my Nano, i.e. substantially longer than the original capture time.
+
+Then looks through the resulting images and confirm that the stopwatch time in the images increases as you'd expect with the timestamps shown in the image file names.
+
+Credit to this [Super User StackExchange answer](https://superuser.com/a/1330042/238591) for the approach used in `extract-frames` to extract multiple frames by timestamp with a single invocation of `ffmpeg`.
+
+---
+
+By adding in `GST_DEBUG=GST_BUS:5` and `post-messages=true` you can capture some output that allows you to assign timestamps to frames:
+
+    $ GST_DEBUG=GST_BUS:5 gst-launch-1.0 filesrc location=out.mkv ! matroskademux ! multifilesink post-messages=true location=frames/out-%03d.jpg &> gst-bus-debug.log
+    $ fgrep filename gst-bus-debug.log
+
+With this information and a timestamp for the start of recording you'd be able to encode an absolute time into the EXIT data of the JPEGs:
+
+    $ start_time=...
+    $ frame=...jpg
+    $ frame_timestamp=... # Retrieved from log file.
+    $ let frame_time=start_time+image_timestamp
+    $ exiftool -DateTimeOriginal=$(date -d @frame_time --rfc-3339=seconds) -overwrite_original $frame
+
+Idea comes from the Xiph [GST cookbook wiki page](https://wiki.xiph.org/index.php?title=GST_cookbook).
