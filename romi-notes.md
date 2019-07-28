@@ -1243,7 +1243,10 @@ And when its running via USB power it can be set to run at full power:
 Record MJPEG
 ------------
 
-Question: extract a frame from an MJPEG file by specifying the wall-clock time at which it was captured?
+To: gstreamer-devel@lists.freedesktop.org
+Date: Jul 25, 2019, 3:33 PM
+Subject: Extract a frame from an MJPEG file by specifying the wall-clock time at which it was captured?
+
 
 I capture video from a camera to a file in MJPEG format like so:
 
@@ -1281,12 +1284,14 @@ Capture and confirm frame rate:
 
 Oddly if you don't specify the actual frame rate explicitly, as above, then `nvarguscamerasrc` will claim the rate is 30 fps and the resulting video will run at the wrong speed and any attempt to extract frames by time will be off. To see this run `gst-launch-1.0` with `-v` like so:
 
-    $ gst-launch-1.0 -v nvarguscamerasrc do-timestamp=true ! 'video/x-raw(memory:NVMM), width=3280, height=2464' ! nvjpegenc ! matroskamux ! filesink location=out.mkv
+    $ gst-launch-1.0 -v nvarguscamerasrc ! 'video/x-raw(memory:NVMM), width=3280, height=2464' ! nvjpegenc ! matroskamux ! filesink location=out.mkv
     ...
     /GstPipeline:pipeline0/GstNvArgusCameraSrc:nvarguscamerasrc0.GstPad:src: caps = video/x-raw(memory:NVMM), width=(int)3280, height=(int)2464, format=(string)NV12, framerate=(fraction)30/1
     ...
     $ ffprobe -loglevel panic -show_streams out.mkv | fgrep r_frame_rate
     r_frame_rate=30/1
+
+I asked about this on the [Nvidia forums](https://devtalk.nvidia.com/default/topic/1058177/jetson-nano/why-does-nvarguscamerasrc-report-a-framerate-of-30-1-rather-than-the-actual-framerate-/).
 
 Let's experiment with extracting frames by timestamp from a video. First put a stopwatch in the cameras field of view, so you can confirm the times look right, and capture a bit more than 5 seconds of video:
 
@@ -1340,3 +1345,47 @@ With this information and a timestamp for the start of recording you'd be able t
     $ exiftool -DateTimeOriginal=$(date -d @frame_time --rfc-3339=seconds) -overwrite_original $frame
 
 Idea comes from the Xiph [GST cookbook wiki page](https://wiki.xiph.org/index.php?title=GST_cookbook).
+
+---
+
+To: gstreamer-devel@lists.freedesktop.org
+Date: Jul 28, 2019, 2:10 PM
+Subject: Calculate the real world time at which a frame was captured?
+
+If I use the filesrc element to playback a video file I can retrieve data like this on a per frame basis:
+
+    index=0, timestamp=832000000, stream-time=0
+    index=1, timestamp=870000000, stream-time=38000000
+    ...
+
+But what is the first timestamp above relative to? How can I retrieve a real-world start time such that I can combine it with this timestamp in order to calculate the real-world time at which the frame was captured?
+
+I control the original file capture process as well as the playback but I haven't found how to capture and recover the start time that I need for combining with timestamps in this way.
+
+Currently, I capture the video file like so:
+
+    gst-launch-1.0 nvarguscamerasrc \
+        ! 'video/x-raw(memory:NVMM), width=3280, height=2464, framerate=21/1' \
+        ! nvjpegenc \
+        ! matroskamux \
+        ! filesink location=out.mkv
+
+I can change the container and video format if this makes it easier to encode and recover the start time later. I can obviously get an _approximate_ start time by recording the time at which the pipeline started - but I'd prefer something more precise (and _if possible_ I'd prefer that the value was encoded somewhere in the resulting video file rather than stored separately).
+
+I've used GST_DEBUG to see if I could see anything that looked like a start time when replaying the file but didn't spot anything.
+
+And if I look at the file with a tool like mediainfo the only date I see is:
+
+    Encoded date : UTC 2019-07-24 19:20:42
+
+TL;DR - when recording my video file how do I capture and later recover a value that can be combined with a relative timestamp value (like the one for index 0 up above) to give the real world time at which the frame was captured.
+
+For reference: I retrieved the above timestamp values etc. from the command line like so:
+
+    $ GST_DEBUG=GST_BUS:5 gst-launch-1.0 filesrc location=out.mkv \
+        ! matroskademux \ 
+        ! multifilesink post-messages=true location=/dev/null &> gst-bus-debug.log
+
+    $ sed -n 's/.*gst_bus_source_dispatch.*, \(index=.*\)/\1/p' gst-bus-debug.log
+
+---
