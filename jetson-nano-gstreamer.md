@@ -195,6 +195,4 @@ Peter Moran's page links to the eLinux Jetson/Cameras [wiki page](https://elinux
 
 ---
 
-Nvidia [multimedia user guide](https://developer.download.nvidia.com/embedded/L4T/r24_Release_v2.0/Docs/L4T_Tegra_X1_Multimedia_User_Guide_Release_24.2.pdf) - how you find the latest version I don't know, googling throws up various versions but no obvious page that links to the _latest_ version.
-
-Maybe you can get there somehow via the [JetPack sub-site](https://developer.nvidia.com/embedded/jetpack), e.g. via a direct link Google isn't picking up or indirectly via a link in a PDF available there. Or via the the [developer zone](https://developer.nvidia.com/embedded-computing).
+Nvidia [L4T accelerated GStreamer user guide 32.1](https://developer.nvidia.com/embedded/dlc/l4t-accelerated-gstreamer-guide-32-1) (you can find the most recent version at the [downloads center](https://developer.nvidia.com/embedded/downloads) - remember to sort the list there by version number rather than release date as the version numbers, for this document, are tied to JetPack versions and sometimes the release updates for older versions of JetPack).
