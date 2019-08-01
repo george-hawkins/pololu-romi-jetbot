@@ -195,4 +195,4 @@ Peter Moran's page links to the eLinux Jetson/Cameras [wiki page](https://elinux
 
 ---
 
-Nvidia [L4T accelerated GStreamer user guide 32.1](https://developer.nvidia.com/embedded/dlc/l4t-accelerated-gstreamer-guide-32-1) (you can find the most recent version at the [downloads center](https://developer.nvidia.com/embedded/downloads) - remember to sort the list there by version number rather than release date as the version numbers, for this document, are tied to JetPack versions and sometimes the release updates for older versions of JetPack).
+Nvidia [L4T accelerated GStreamer user guide 32.1](https://developer.nvidia.com/embedded/dlc/l4t-accelerated-gstreamer-guide-32-1). You can find the most recent version at the [downloads center](https://developer.nvidia.com/embedded/downloads). Remember to sort the list there by version number rather than release date as the version numbers, for this document, are tied to JetPack versions and sometimes they release updates for older versions of JetPack.
